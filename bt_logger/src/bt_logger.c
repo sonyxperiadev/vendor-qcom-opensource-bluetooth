@@ -86,6 +86,7 @@ static bt_log_buffer_t *log_list = NULL;
 static short int looper;
 static pthread_t dump_logs_t = -1;
 static unsigned char pending_dump = 0;
+static bt_log_buffer_t *log_list_dump = NULL;
 
 /*____________________________________________________________________
     FUNCTIONS
@@ -444,11 +445,12 @@ void *log_dump_thread(void *param)
 
 void dump_logs()
 {
+    log_list_dump = log_list;
     if (dump_logs_t != -1) {
         ALOGE("Dump thread is already running, return");
         return;
     }
-    if (pthread_create(&dump_logs_t, NULL, log_dump_thread, ( void*)log_list)) {
+    if (pthread_create(&dump_logs_t, NULL, log_dump_thread, ( void*)log_list_dump)) {
         ALOGE("ERROR creating log dump thread");
     }else  {
         init_list(&log_list, BT_LOGGER_BUFFER_LIMIT);
