@@ -1,6 +1,27 @@
-/* Copyright (C) 2016-2017, The Linux Foundation. All rights reserved.
+/*  Copyright (C) 2016-2017, The Linux Foundation. All rights reserved.
  *
  *  Not a Contribution
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted (subject to the limitations in the
+ *  disclaimer below) provided that the following conditions are met:
+
+      * Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+      * Redistributions in binary form must reproduce the above
+        copyright notice, this list of conditions and the following
+        disclaimer in the documentation and/or other materials provided
+        with the distribution.
+
+      * Neither the name of The Linux Foundation nor the names of its
+        contributors may be used to endorse or promote products derived
+        from this software without specific prior written permission.
+
+ *  NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+ *  GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+ *  HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+ *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
  *****************************************************************************/
 /*****************************************************************************
  *  Copyright (C) 2009-2012 Broadcom Corporation
@@ -86,6 +107,7 @@ static char a2dp_hal_imp[PROPERTY_VALUE_MAX] = "false";
 
 audio_sbc_encoder_config_t sbc_codec;
 audio_aptx_encoder_config_t aptx_codec;
+audio_aptx_tws_encoder_config_t aptx_tws_codec;
 audio_aac_encoder_config_t aac_codec;
 audio_ldac_encoder_config_t ldac_codec;
 audio_celt_encoder_config_t celt_codec;
@@ -388,7 +410,6 @@ static void* a2dp_codec_parser(uint8_t *codec_cfg, audio_format_t *codec_type,
             ALOGW("AptX-HD codec");
             *codec_type = AUDIO_FORMAT_APTX_HD;
         }
-
         if (vendor_ldac_id == VENDOR_LDAC &&
             codec_cfg[CODEC_ID_OFFSET] == LDAC_CODEC_ID)
         {
@@ -397,6 +418,13 @@ static void* a2dp_codec_parser(uint8_t *codec_cfg, audio_format_t *codec_type,
             ldac_codec_parser(codec_cfg);
             if (sample_freq) *sample_freq = ldac_codec.sampling_rate;
             return ((void *)&ldac_codec);
+        }
+        if (codec_cfg[VENDOR_ID_OFFSET] == VENDOR_APTX_HD &&
+            codec_cfg[CODEC_ID_OFFSET] == APTX_TWS_CODEC_ID)
+        {
+            ALOGW("AptX-TWS codec");
+            *codec_type = ENC_CODEC_TYPE_APTX_DUAL_MONO;
+            //aptx_codec.sync_mode = 0x01;
         }
         memset(&aptx_codec,0,sizeof(audio_aptx_encoder_config_t));
         p_cfg++; //skip dev_idx
@@ -425,6 +453,7 @@ static void* a2dp_codec_parser(uint8_t *codec_cfg, audio_format_t *codec_type,
         switch (byte & A2D_APTX_CHAN_MASK)
         {
             case A2D_APTX_CHAN_STEREO:
+            case A2D_APTX_TWS_CHAN_MODE:
                  aptx_codec.channels = 2;
                  break;
             case A2D_APTX_CHAN_MONO:
@@ -450,6 +479,13 @@ static void* a2dp_codec_parser(uint8_t *codec_cfg, audio_format_t *codec_type,
 
         if(sample_freq) *sample_freq = aptx_codec.sampling_rate;
         ALOGW("APTx: Done copying full codec config");
+        if (*codec_type == ENC_CODEC_TYPE_APTX_DUAL_MONO)
+        {
+            memset(&aptx_tws_codec, 0, sizeof(audio_aptx_tws_encoder_config_t));
+            memcpy(&aptx_tws_codec, &aptx_codec, sizeof(aptx_codec));
+            aptx_tws_codec.sync_mode = 0x02;
+            return ((void *)&aptx_tws_codec);
+        }
         return ((void *)&aptx_codec);
     }
     else if (codec_cfg[CODEC_OFFSET] == CODEC_TYPE_CELT)
@@ -1395,6 +1431,11 @@ bool audio_is_scrambling_enabled(void)
         }
         INFO("%s: a2dp stream not configured,wait 100mse & retry", __func__);
         usleep(100000);
+    }
+    if (codec_type == ENC_CODEC_TYPE_APTX_DUAL_MONO) {
+        INFO("%s:TWSP codec, return false",__func__);
+        pthread_mutex_unlock(&audio_stream.lock);
+        return false;
     }
     if(status == A2DP_CTRL_ACK_SUCCESS) {
 
