@@ -55,6 +55,7 @@ static int bt_split_a2dp_enabled = 0;
 #define STREAM_START_MAX_RETRY_COUNT 10
 #define STREAM_START_MAX_RETRY_LOOPER 8
 #define CTRL_CHAN_RETRY_COUNT 3
+#define CHECK_A2DP_READY_MAX_COUNT 15
 
 #define CASE_RETURN_STR(const) case const: return #const;
 
@@ -1168,6 +1169,7 @@ void* audio_get_next_codec_config(uint8_t idx, audio_format_t *codec_type)
 
 int audio_check_a2dp_ready()
 {
+    int i;
     ALOGW("audio_check_a2dp_ready: state %s", dump_a2dp_hal_state(audio_stream.state));
     tA2DP_CTRL_ACK status;
     pthread_mutex_lock(&audio_stream.lock);
@@ -1187,8 +1189,19 @@ int audio_check_a2dp_ready()
         status = audio_stream.ack_status;
         if (status == A2DP_CTRL_ACK_UNKNOWN)
         {
-            wait_for_stack_response(1);
-            status = audio_stream.ack_status;
+            for (i = 0; i < CHECK_A2DP_READY_MAX_COUNT; i++)
+            {
+                 wait_for_stack_response(1);
+                 status = audio_stream.ack_status;
+                 if (status == A2DP_CTRL_ACK_SUCCESS)
+                 {
+                     ALOGW("audio_check_a2dp_ready : %s",dump_a2dp_ctrl_ack(status));
+                     pthread_mutex_unlock(&audio_stream.lock);
+                     return 1;
+                 }
+                 ALOGW("audio_check_a2dp_ready(): a2dp stream not ready, wait 200msec & retry");
+                 usleep(200000);
+            }
         }
         audio_stream.ack_status = A2DP_CTRL_ACK_UNKNOWN;
         ALOGW("audio_check_a2dp_ready = %s",dump_a2dp_ctrl_ack(status));
