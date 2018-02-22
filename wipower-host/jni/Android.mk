@@ -11,7 +11,8 @@ LOCAL_C_INCLUDES += \
         packages/apps/Bluetooth/jni \
         vendor/qcom/opensource/bluetooth_ext/vhal/include \
         vendor/qcom/opensource/bluetooth/hal/include \
-        system/bt/types/
+        system/bt/types/ \
+        libnativehelper/include/nativehelper
 
 
 LOCAL_REQUIRED_MODULES := bluetooth.default

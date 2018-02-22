@@ -9,7 +9,7 @@ LOCAL_SRC_FILES:=     \
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/inc
 
 LOCAL_MODULE:= libbt-hidlclient
-
+LOCAL_MODULE_SUFFIX:= .so
 LOCAL_SHARED_LIBRARIES += libutils
 LOCAL_SHARED_LIBRARIES += libhidlbase
 LOCAL_SHARED_LIBRARIES += libhidltransport
