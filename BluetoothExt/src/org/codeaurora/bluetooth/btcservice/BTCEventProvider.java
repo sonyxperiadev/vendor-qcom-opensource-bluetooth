@@ -33,7 +33,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothHeadset;
 import android.bluetooth.BluetoothA2dp;
-import android.bluetooth.BluetoothInputDevice;
+import android.bluetooth.BluetoothHidHost;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -142,7 +142,7 @@ public class BTCEventProvider extends BroadcastReceiver {
                 if (V) Log.v(TAG, "A2DP.PLAYING_STATE_CHANGED: PLAYING_STOPPED");
                 event =  BTCService.BTCEvent.BLUETOOTH_SINK_STREAM_STOPPED;
             }
-        } else if (action.equals(BluetoothInputDevice.ACTION_CONNECTION_STATE_CHANGED)) {
+        } else if (action.equals(BluetoothHidHost.ACTION_CONNECTION_STATE_CHANGED)) {
             if (V) Log.v(TAG, "HID.ACTION_CONNECTION_STATE_CHANGED");
             state = intent.getIntExtra
                        (BluetoothProfile.EXTRA_STATE, BluetoothAdapter.ERROR);

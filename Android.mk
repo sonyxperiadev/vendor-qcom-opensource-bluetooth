@@ -10,6 +10,6 @@ ifeq ($(BOARD_USE_QTI_BT_STACK),true)
 #include $(TMP_LOCAL_PATH)/wipower-host/Android.mk
 include $(TMP_LOCAL_PATH)/bt_logger/Android.mk
 include $(TMP_LOCAL_PATH)/libbt-logClient/Android.mk
-#include $(TMP_LOCAL_PATH)/BluetoothExt/Android.mk
+include $(TMP_LOCAL_PATH)/BluetoothExt/Android.mk
 endif #BOARD_USE_QTI_BT_STACK
 

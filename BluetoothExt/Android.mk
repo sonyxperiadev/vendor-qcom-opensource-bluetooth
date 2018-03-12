@@ -15,3 +15,5 @@ LOCAL_JAVA_LIBRARIES := javax.obex
 LOCAL_JAVA_LIBRARIES += telephony-common
 
 LOCAL_PROGUARD_ENABLED := disabled
+include $(BUILD_PACKAGE)
+include $(call all-makefiles-under,$(LOCAL_PATH))
