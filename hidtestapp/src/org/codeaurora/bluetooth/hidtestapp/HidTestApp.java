@@ -34,8 +34,8 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.IBluetooth;
-import android.bluetooth.IBluetoothInputDevice;
-import android.bluetooth.BluetoothInputDevice;
+import android.bluetooth.IBluetoothHidHost;
+import android.bluetooth.BluetoothHidHost;
 import android.bluetooth.BluetoothProfile.ServiceListener;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -50,7 +50,7 @@ import android.widget.Toast;
 
 public class HidTestApp extends Activity implements OnClickListener {
 	private static final String TAG = "HidTestApp";
-	private static BluetoothInputDevice mService = null;
+	private static BluetoothHidHost mService = null;
 	private BluetoothAdapter mAdapter;
 	private BluetoothDevice mRemoteDevice;
 	private Context mContext;
@@ -231,7 +231,7 @@ public class HidTestApp extends Activity implements OnClickListener {
 
     public void init() {
         if (!mAdapter.getProfileProxy(mContext, mServiceListener,
-                BluetoothProfile.INPUT_DEVICE)) {
+                BluetoothProfile.HID_HOST)) {
             Log.w(TAG, "Cannot obtain profile proxy");
             return;
         }
@@ -239,7 +239,7 @@ public class HidTestApp extends Activity implements OnClickListener {
 
     public void deinit() {
         if (mService != null) {
-            mAdapter.closeProfileProxy(BluetoothProfile.INPUT_DEVICE, mService);
+            mAdapter.closeProfileProxy(BluetoothProfile.HID_HOST, mService);
         }
     }
 
@@ -287,17 +287,17 @@ public class HidTestApp extends Activity implements OnClickListener {
 
         @Override
         public void onServiceConnected(int profile, BluetoothProfile proxy) {
-            if (profile != BluetoothProfile.INPUT_DEVICE) return;
+            if (profile != BluetoothProfile.HID_HOST) return;
 
             Log.i(TAG, "Profile proxy connected");
 
-            mService = (BluetoothInputDevice) proxy;
+            mService = (BluetoothHidHost) proxy;
 
         }
 
         @Override
         public void onServiceDisconnected(int profile) {
-            if (profile != BluetoothProfile.INPUT_DEVICE) return;
+            if (profile != BluetoothProfile.HID_HOST) return;
 
             Log.i(TAG, "Profile proxy disconnected");
 
