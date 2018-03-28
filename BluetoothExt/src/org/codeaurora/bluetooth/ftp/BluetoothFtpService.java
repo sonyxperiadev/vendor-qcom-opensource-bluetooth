@@ -455,6 +455,10 @@ public class BluetoothFtpService extends Service {
             } catch (IOException e) {
                 Log.e(TAG, "Error create RfcommServerSocket " + e.toString());
                 initSocketOK = false;
+            } catch (SecurityException e) {
+                Log.e(TAG, "initRfcommServerSocket failed " + e.toString());
+                initSocketOK = false;
+                break;
             }
             if (!initSocketOK) {
                      // Need to break out of this loop if BT is being turned off.
