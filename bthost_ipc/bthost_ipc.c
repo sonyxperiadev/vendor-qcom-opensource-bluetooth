@@ -1241,7 +1241,7 @@ bool audio_is_scrambling_enabled(void)
         ALOGW("audio_is_scrambling_enabled returned false due to stack deinit");
         return false;
     }
-    if( property_get("persist.vendor.bt.splita2dp.44_1_war", value, "false"))
+    if( property_get("persist.vendor.bt.splita2dp.44_1_war", value, "true"))
     {
         if(!strcmp(value, "false"))
         {
