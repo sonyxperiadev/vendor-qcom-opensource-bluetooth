@@ -1196,7 +1196,7 @@ int audio_check_a2dp_ready()
     {
         ALOGW("audio_check_a2dp_ready = NOT ready - callbacks not registered");
         pthread_mutex_unlock(&audio_stream.lock);
-        return A2DP_CTRL_SKT_DISCONNECTED;
+        return 0;
     }
     pthread_mutex_unlock(&audio_stream.lock);
     return status == A2DP_CTRL_ACK_SUCCESS;
