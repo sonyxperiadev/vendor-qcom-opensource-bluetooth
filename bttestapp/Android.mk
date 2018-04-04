@@ -11,9 +11,7 @@ LOCAL_SRC_FILES := $(filter-out src/org/codeaurora/bluetooth/bttestapp/services/
 LOCAL_PACKAGE_NAME := BTTestApp
 LOCAL_CERTIFICATE := platform
 
-LOCAL_MODULE_OWNER := qcom
-
-LOCAL_STATIC_JAVA_LIBRARIES := com.android.vcard  android.bluetooth.client.map
+LOCAL_MODULE_OWNER := qti
 
 LOCAL_PROGUARD_ENABLED := disabled
 

@@ -29,6 +29,7 @@
 package org.codeaurora.bluetooth.bttestapp;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothA2dpSink;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.SdpMasRecord;
@@ -46,37 +47,45 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.os.ParcelUuid;
+import android.os.SystemProperties;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.ToggleButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.codeaurora.bluetooth.bttestapp.R;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends MonkeyActivity {
 
-    private final String TAG = "MainActivity";
+    private final String TAG = "BtTestMainActivity";
 
-    public static final String PREF_DEVICE = "device";
-    public static final String PREF_SERVICES = "services";
+    private static final String PREF_DEVICE = "device";
+    private static final String PREF_SERVICES = "services";
 
-    public static final String PICKER_ACTION = "android.bluetooth.devicepicker.action.LAUNCH";
-    public static final String PICKER_SELECTED = "android.bluetooth.devicepicker.action.DEVICE_SELECTED";
+    private static final String PICKER_ACTION = "android.bluetooth.devicepicker.action.LAUNCH";
+    private static final String PICKER_SELECTED =
+            "android.bluetooth.devicepicker.action.DEVICE_SELECTED";
 
-    private BluetoothA2dpSink ma2dpSink = null;
-
-    BluetoothDevice mDevice;
-
-    ProfileService mProfileService;
+    private BluetoothDevice mDevice;
 
     private boolean mIsBound = false;
 
     private boolean mDiscoveryInProgress = false;
+    private BluetoothAdapter mBtAdapter;
+    private Button mBtnDiscoverService, mBtnSelectDevice, mSinkButton, mSourceButton, mAvrcpButton;
+    private static long current_time, switch_time;
+    private ListView mLvServices;
+    private ArrayList<String> mListUuid = new ArrayList<String>();
 
-    private ServicesFragment mServicesFragment = null;
+    private final String UUID_AVRCP_TARGET = "0000110C-0000-1000-8000-00805F9B34FB";
+    private final String UUID_AUDIO_SOURCE = "0000110A-0000-1000-8000-00805F9B34FB";
+    private final String UUID_AUDIO_SINK = "0000110B-0000-1000-8000-00805F9B34FB";
 
     private final BroadcastReceiver mPickerReceiver = new BroadcastReceiver() {
 
@@ -91,8 +100,6 @@ public class MainActivity extends MonkeyActivity {
                 updateDevice(device);
                 unregisterReceiver(this);
 
-                mServicesFragment.removeService(null);
-                mServicesFragment.persistServices();
             }
         }
     };
@@ -108,6 +115,7 @@ public class MainActivity extends MonkeyActivity {
             if (BluetoothDevice.ACTION_UUID.equals(action)) {
                 BluetoothDevice dev = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (!dev.equals(mDevice)) {
+                    Log.i(TAG," some other device ");
                     return;
                 }
 
@@ -116,65 +124,45 @@ public class MainActivity extends MonkeyActivity {
                 if (uuids != null) {
                     for (Parcelable uuid : uuids) {
                          Log.v(TAG, "Received UUID: " + uuid.toString());
-                       /* if (BluetoothUuid.PBAP_PSE.equals(uuid)) {
-                            mServicesFragment.addService(ServicesFragment.Service.Type.PBAP, null);
-                        } else */if (BluetoothUuid.Handsfree_AG.equals(uuid)) {
-                            mServicesFragment.addService(ServicesFragment.Service.Type.HFP, null);
-                        } else if (BluetoothUuid.AvrcpTarget.equals(uuid) ||
-                                    BluetoothUuid.AudioSource.equals(uuid) ||
-                                    BluetoothUuid.AudioSink.equals(uuid)) {
-                            Log.v(TAG, "Adding AVRCP");
-                            mServicesFragment.addService(ServicesFragment.Service.Type.AVRCP, null);
+                       if (UUID_AVRCP_TARGET.equalsIgnoreCase(uuid.toString()) ||
+                               UUID_AUDIO_SOURCE.equalsIgnoreCase(uuid.toString()) ||
+                               UUID_AUDIO_SINK.equalsIgnoreCase(uuid.toString())) {
+                            mAvrcpButton.setEnabled(true);
                         }
                     }
-                }
+             }
+           } else if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+               final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                       BluetoothAdapter.ERROR);
+               Log.d(TAG, " Action " + action + " state :" + state);
+               setBTState();
+               if (state == BluetoothAdapter.STATE_OFF) {
+                   if (!mBtAdapter.isEnabled()) {
+                       Log.d(TAG, " Enabling BT... ");
+                       mBtAdapter.enable();
+                   }
+               } else if (state == BluetoothAdapter.STATE_ON) {
+                   current_time = System.currentTimeMillis();
+                   Log.d(TAG, "Time for BT OFF->ON : " + (current_time - switch_time) + " ms");
+                   mSinkButton.setEnabled(true);
+                   mSourceButton.setEnabled(true);
+               }
 
-                mServicesFragment.persistServices();
-
-                if (mDiscoveryInProgress) {
-                    Log.v(TAG, "Searching MAS instances");
-                    mDevice.sdpSearch(BluetoothUuid.MAS);
-                }
-
-            } else if (action.equals(BluetoothDevice.ACTION_SDP_RECORD)){
-                BluetoothDevice dev = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                if (!dev.equals(mDevice)) {
-                    return;
-                }
-
-                ParcelUuid uuid = intent.getParcelableExtra(BluetoothDevice.EXTRA_UUID);
-                Log.v(TAG, "Received UUID: " + uuid.toString());
-                Log.v(TAG, "expected UUID: " +
-                        BluetoothUuid.MAS.toString());
-                Log.v(TAG, "mDiscoveryInProgress: " + mDiscoveryInProgress);
-                if(uuid.equals(BluetoothUuid.MAS)){
-                    SdpMasRecord masrec = intent.getParcelableExtra(BluetoothDevice.EXTRA_SDP_RECORD);
-                    Log.v(TAG, "masrec: " + masrec);
-
-                    if (masrec != null) {
-                        mProfileService.setMasInstances(masrec);
-                        mServicesFragment.addService(ServicesFragment.Service.Type.MAP, masrec);
-                    }
-
-                    mServicesFragment.persistServices();
-
-                    mDiscoveryInProgress = false;
-                }
-            }
-        }
-    };
-
-    private final ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            mProfileService = ((ProfileService.LocalBinder) service).getService();
-            mProfileService.setDevice(mDevice);
-            mServicesFragment.restoreServices();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName className) {
-            mProfileService = null;
+           } else if (action.equals(BluetoothA2dpSink.ACTION_CONNECTION_STATE_CHANGED)) {
+               int newState = intent.getIntExtra(BluetoothProfile.EXTRA_STATE, -1);
+               Log.d(TAG, " Action " + action + ", new A2DP Sink State :" + newState);
+               if (newState == BluetoothProfile.STATE_CONNECTED) {
+                   Log.d(TAG, " BT-OFF to reconnection time = " +
+                       (System.currentTimeMillis() - switch_time) +"ms");
+               }
+           } else if (action.equals(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED)) {
+               int newState = intent.getIntExtra(BluetoothProfile.EXTRA_STATE, -1);
+               Log.d(TAG, " Action " + action + ", new A2DP Source State :" + newState);
+               if (newState == BluetoothProfile.STATE_CONNECTED) {
+                   Log.d(TAG, " BT-OFF to reconnection time = " +
+                       (System.currentTimeMillis() - switch_time) +"ms");
+               }
+           }
         }
     };
 
@@ -184,20 +172,8 @@ public class MainActivity extends MonkeyActivity {
 
         Log.v(TAG, "onCreate");
 
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         setContentView(R.layout.activity_main);
-
-        mServicesFragment = (ServicesFragment) getFragmentManager().findFragmentById(
-                R.id.services_list);
-
-        Intent intent = new Intent(this, ProfileService.class);
-        startService(intent);
-
-        if (bindService(intent, mConnection, Context.BIND_AUTO_CREATE)) {
-            mIsBound = true;
-        }
-        BluetoothAdapter.getDefaultAdapter().getProfileProxy(getApplicationContext(),
-                                            ma2dpSinkServiceListener, BluetoothProfile.A2DP_SINK);
     }
 
     @Override
@@ -225,6 +201,9 @@ public class MainActivity extends MonkeyActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_UUID);
         filter.addAction(BluetoothDevice.ACTION_SDP_RECORD);
+        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        filter.addAction(BluetoothA2dpSink.ACTION_CONNECTION_STATE_CHANGED);
+        filter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
         registerReceiver(mReceiver, filter);
 
         if (BluetoothAdapter.getDefaultAdapter().isEnabled() == false) {
@@ -234,32 +213,26 @@ public class MainActivity extends MonkeyActivity {
             b = (Button) findViewById(R.id.select_device);
             b.setEnabled(false);
         }
+        mBtnDiscoverService = (Button) findViewById(R.id.discover_services);
+        mBtnSelectDevice = (Button) findViewById(R.id.select_device);
+        mSinkButton = (Button) findViewById(R.id.id_a2dp_sink);
+        mSourceButton = (Button) findViewById(R.id.id_a2dp_source);
+        mAvrcpButton = (Button) findViewById(R.id.id_btn_show_avrcp);
+        mLvServices =(ListView)findViewById(R.id.id_lv_services);
+        mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+        setBTState();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-
         Log.v(TAG, "onPause");
-
         unregisterReceiver(mReceiver);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        Log.v(TAG, "onStop");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        if (mIsBound) {
-            unbindService(mConnection);
-        }
-
         Log.v(TAG, "onDestroy");
     }
 
@@ -277,40 +250,19 @@ public class MainActivity extends MonkeyActivity {
             if (mDevice == null || mDiscoveryInProgress) {
                 return;
             }
-
-            mServicesFragment.removeService(null);
-
             Log.v(TAG, "fetching UUIDs");
             mDiscoveryInProgress = mDevice.fetchUuidsWithSdp();
         }
     }
 
-    private BluetoothProfile.ServiceListener ma2dpSinkServiceListener =
-                              new BluetoothProfile.ServiceListener() {
+    public void showCoveArtActivity(View v) {
+        Log.i(TAG," showCoveArtActivity");
+        startActivity(new Intent(this,AvrcpCoverArtActivity.class));
+    }
 
-        @Override
-        public void onServiceDisconnected(int profile) {
-            if (profile == BluetoothA2dpSink.A2DP_SINK) {
-                Log.v(TAG, "onServiceDisconnected ");
-                ma2dpSink = null;
-            }
-
-        }
-
-        @Override
-        public void onServiceConnected(int profile, BluetoothProfile proxy) {
-            if (profile == BluetoothProfile.A2DP_SINK) {
-                Log.v(TAG, "onServiceConnected ");
-                ma2dpSink = (BluetoothA2dpSink) proxy;
-            }
-
-        }
-    };
-
-    public void onToggleClicked(View view) {
-        // Is the toggle on?
-        boolean on = ((ToggleButton) view).isChecked();
-        Log.v(TAG, "onToggleClicked is_on: " + on);
+    public void showAvrcpActivity(View v) {
+        Log.i(TAG," showAvrcpActivity");
+        startActivity(new Intent(this,AvrcpTestActivity.class));
     }
 
     private void updateDevice(BluetoothDevice device) {
@@ -339,8 +291,51 @@ public class MainActivity extends MonkeyActivity {
 
         mDevice = device;
 
-        if (mProfileService != null) {
-            mProfileService.setDevice(mDevice);
+    }
+
+    public void onRadioButtonClicked(View v) {
+        switch_time = System.currentTimeMillis();
+        boolean isA2dpSinkEnabled = SystemProperties.getBoolean("persist.service.bt.a2dp.sink",
+                false);
+
+        // Switch role to A2DP Source
+        if (v.getId() == R.id.id_a2dp_source) {
+            if (!isA2dpSinkEnabled) {
+                Log.d(TAG, "Already in Source role, ignore user action ignored");
+                return;
+            }
+            Log.d(TAG, "Switch role to A2DP Source");
+            SystemProperties.set("persist.service.bt.a2dp.sink", false + "");
+            SystemProperties.set("persist.service.bt.avrcp.controller", false + "");
+
+        // Switch role to A2DP Sink
+        } else if (v.getId() == R.id.id_a2dp_sink) {
+            if (isA2dpSinkEnabled) {
+                Log.d(TAG, "Already in A2DP Sink role, user action ignored");
+                return;
+            }
+            Log.d(TAG, "Switch role to A2DP Sink");
+            SystemProperties.set("persist.service.bt.a2dp.sink", true + "");
+            SystemProperties.set("persist.service.bt.avrcp.controller", true + "");
+        }
+        mSinkButton.setEnabled(false);
+        mSourceButton.setEnabled(false);
+
+        // Turn BT OFF and ON in order to reflect property change
+        if (mBtAdapter.isEnabled())
+            mBtAdapter.disable();
+        else
+            mBtAdapter.enable();
+    }
+
+    private void setBTState() {
+        boolean isBtEnabled = mBtAdapter.isEnabled();
+        if (isBtEnabled) {
+            mBtnDiscoverService.setEnabled(true);
+            mBtnSelectDevice.setEnabled(true);
+        } else {
+            mBtnDiscoverService.setEnabled(false);
+            mBtnSelectDevice.setEnabled(false);
         }
     }
 }

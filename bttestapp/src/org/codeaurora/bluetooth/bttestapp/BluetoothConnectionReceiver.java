@@ -41,7 +41,7 @@ import java.util.ArrayList;
 
 public class BluetoothConnectionReceiver extends BroadcastReceiver {
 
-    private final static String TAG = "BluetoothConnectionReceiver";
+    private final static String TAG = "BtTestConnectionReceiver";
 
     public static final String ACTION_NEW_BLUETOOTH_DEVICE = "org.codeaurora.bluetooth.action.NEW_BLUETOOTH_DEVICE";
 
