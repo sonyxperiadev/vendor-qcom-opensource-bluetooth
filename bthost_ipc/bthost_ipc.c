@@ -55,7 +55,7 @@ static int bt_split_a2dp_enabled = 0;
 #define STREAM_START_MAX_RETRY_COUNT 10
 #define STREAM_START_MAX_RETRY_LOOPER 8
 #define CTRL_CHAN_RETRY_COUNT 3
-#define CHECK_A2DP_READY_MAX_COUNT 15
+#define CHECK_A2DP_READY_MAX_COUNT 20
 
 #define CASE_RETURN_STR(const) case const: return #const;
 
