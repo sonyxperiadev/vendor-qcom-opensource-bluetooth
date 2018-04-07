@@ -101,8 +101,10 @@ struct a2dp_stream_common {
 /*
 codec specific definitions
 */
+#define AUDIO_CODEC_TYPE_CELT         603979776u // 0x24000000UL
 #define CODEC_TYPE_SBC 0x00
 #define CODEC_TYPE_AAC 0x02
+#define CODEC_TYPE_CELT 0xEF
 #define NON_A2DP_CODEC_TYPE 0xFF
 #define CODEC_OFFSET 3
 #define VENDOR_ID_OFFSET 4
@@ -195,6 +197,32 @@ codec specific definitions
 
 #define A2DP_DEFAULT_SINK_LATENCY 0
 
+
+// CELT Codec config in order.
+// 7-4 bits of first byte of codec_info element
+#define A2D_CELT_SAMP_FREQ_MASK    0xF0
+#define A2D_CELT_SAMP_FREQ_48      0x10
+#define A2D_CELT_SAMP_FREQ_44      0x20
+#define A2D_CELT_SAMP_FREQ_32      0x40
+// 0-3 bits of first byte of codec_info element
+#define A2D_CELT_CHANNEL_MASK      0x0F
+#define A2D_CELT_CH_MONO           0x01
+#define A2D_CELT_CH_STEREO         0x02
+// 7-4 bits of second byte: frame size
+#define A2D_CELT_FRAME_SIZE_MASK   0xF0
+#define A2D_CELT_FRAME_SIZE_64     0x10
+#define A2D_CELT_FRAME_SIZE_128    0x20
+#define A2D_CELT_FRAME_SIZE_256    0x40
+#define A2D_CELT_FRAME_SIZE_512    0x80
+//0-3 bits of second byte: actual value of complexity
+#define A2D_CELT_COMPLEXITY_MASK   0x0F
+// 7-4 bits of third byte: prediction mode
+#define A2D_CELT_PREDICTION_MODE_MASK   0xF0
+// 0th bit of third byte: vbr flag
+#define A2D_CELT_VBR_MASK         0x01
+
+// next 2 bytes is actual frame size
+// next 1 bytes is actual complexity
 typedef struct {
     uint32_t subband;    /* 4, 8 */
     uint32_t blk_len;    /* 4, 8, 12, 16 */
@@ -251,6 +279,16 @@ typedef struct {
     uint32_t sampling_rate;
     uint32_t bitrate;
 } audio_aac_encoder_config_t;
+
+typedef struct {
+    uint32_t sampling_rate; /* 32000 - 48000, 48000 */
+    uint16_t channels; /* 1-Mono, 2-Stereo, 2*/
+    uint16_t frame_size; /* 64-128-256-512, 512 */
+    uint16_t complexity; /* 0-10, 1 */
+    uint16_t prediction_mode; /* 0-1-2, 0 */
+    uint16_t vbr_flag; /* 0-1, 0*/
+    uint32_t bitrate; /*32000 - 1536000, 139500*/
+} audio_celt_encoder_config_t;
 
 //HIDL callbacks to invoke callback to BT stack
 typedef void (*bt_ipc_start_stream_req_cb)(void);

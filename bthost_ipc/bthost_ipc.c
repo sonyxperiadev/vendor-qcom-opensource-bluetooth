@@ -88,6 +88,7 @@ audio_sbc_encoder_config_t sbc_codec;
 audio_aptx_encoder_config_t aptx_codec;
 audio_aac_encoder_config_t aac_codec;
 audio_ldac_encoder_config_t ldac_codec;
+audio_celt_encoder_config_t celt_codec;
 /*****************************************************************************
 **  Functions
 ******************************************************************************/
@@ -451,6 +452,77 @@ static void* a2dp_codec_parser(uint8_t *codec_cfg, audio_format_t *codec_type,
         ALOGW("APTx: Done copying full codec config");
         return ((void *)&aptx_codec);
     }
+    else if (codec_cfg[CODEC_OFFSET] == CODEC_TYPE_CELT)
+    {
+        uint8_t celt_samp_freq = 0;
+        uint32_t celt_bit_rate = 0;
+        memset(&celt_codec,0,sizeof(audio_celt_encoder_config_t));
+        switch(codec_cfg[4] & A2D_CELT_SAMP_FREQ_MASK)
+        {
+        case A2D_CELT_SAMP_FREQ_48:
+            celt_codec.sampling_rate = 48000;
+            break;
+        case A2D_CELT_SAMP_FREQ_44:
+            celt_codec.sampling_rate = 44100;
+            break;
+        case A2D_CELT_SAMP_FREQ_32:
+            celt_codec.sampling_rate = 32000;
+            break;
+        default:
+            ALOGE("CELT: unknown sampl freq");
+        }
+        switch(codec_cfg[4] & A2D_CELT_CHANNEL_MASK)
+        {
+        case A2D_CELT_CH_MONO:
+            celt_codec.channels = 1;
+            break;
+        case A2D_CELT_CH_STEREO:
+            celt_codec.channels = 2;
+            break;
+        default:
+            ALOGE("CELT: unknown channel");
+        }
+        switch(codec_cfg[5] & A2D_CELT_FRAME_SIZE_MASK)
+        {
+        case A2D_CELT_FRAME_SIZE_64:
+            celt_codec.frame_size = 64;
+            break;
+        case A2D_CELT_FRAME_SIZE_128:
+            celt_codec.frame_size = 128;
+            break;
+        case A2D_CELT_FRAME_SIZE_256:
+            celt_codec.frame_size = 256;
+            break;
+        case A2D_CELT_FRAME_SIZE_512:
+            celt_codec.frame_size = 512;
+            break;
+        default:
+            ALOGE("CELT: unknown frame size");
+        }
+        celt_codec.complexity = codec_cfg[5] & A2D_CELT_COMPLEXITY_MASK;
+        celt_codec.prediction_mode =
+                (codec_cfg[6] & A2D_CELT_PREDICTION_MODE_MASK) >> 4;
+        celt_codec.vbr_flag = codec_cfg[6] & A2D_CELT_VBR_MASK;
+
+        celt_codec.bitrate |= codec_cfg[7];
+        celt_codec.bitrate = celt_codec.bitrate << 8;
+        celt_codec.bitrate |= codec_cfg[8];
+        celt_codec.bitrate = celt_codec.bitrate << 8;
+        celt_codec.bitrate |= codec_cfg[9];
+        celt_codec.bitrate = celt_codec.bitrate << 8;
+        celt_codec.bitrate |= codec_cfg[10];
+        *codec_type = AUDIO_CODEC_TYPE_CELT;
+
+        ALOGE("CELT Bitrate: 0%x", celt_codec.bitrate);
+        ALOGE("CELT channel: 0%x", celt_codec.channels);
+        ALOGE("CELT complexity: 0%x", celt_codec.complexity);
+        ALOGE("CELT frame_size: 0%x", celt_codec.frame_size);
+        ALOGE("CELT prediction_mode: 0%x", celt_codec.prediction_mode);
+        ALOGE("CELT sampl_freq: 0%x", celt_codec.sampling_rate);
+        ALOGE("CELT vbr_flag: 0%x", celt_codec.vbr_flag);
+        ALOGE("CELT codec_type: 0%x", codec_type);
+        return ((void *)(&celt_codec));
+    }
     return NULL;
 }
 
@@ -553,6 +625,14 @@ int wait_for_stack_response(uint8_t time_to_wait)
         pthread_mutex_unlock(&audio_stream.ack_lock);
         return retry;
     }
+    // in race condition, ack_status is updated as SUCCESS
+    // without ack_recvd made 0.
+    if (audio_stream.ack_status == A2DP_CTRL_ACK_SUCCESS)
+    {
+        ALOGE("ACK Success, no need to wait");
+        pthread_mutex_unlock(&audio_stream.ack_lock);
+        return retry;
+    }
     while (retry < CTRL_CHAN_RETRY_COUNT &&
               ack_recvd == 0)
     {
@@ -605,7 +685,12 @@ void bt_stack_on_stream_started(tA2DP_CTRL_ACK status)
 {
     ALOGW("bt_stack_on_stream_started: status = %d",status);
     pthread_mutex_lock(&audio_stream.ack_lock);
-    audio_stream.ack_status = status;
+    if ((audio_stream.ack_status != A2DP_CTRL_ACK_UNKNOWN) && (status == A2DP_CTRL_ACK_PENDING)) {
+        ALOGW("status already changed to = %d, don't update pending",audio_stream.ack_status);
+    }
+    else {
+        audio_stream.ack_status = status;
+    }
     resp_received = true;
     if (!ack_recvd)
     {
@@ -617,23 +702,36 @@ void bt_stack_on_stream_started(tA2DP_CTRL_ACK status)
 
 void bt_stack_on_stream_suspended(tA2DP_CTRL_ACK status)
 {
-    ALOGW("bt_stack_on_stream_suspended");
+    ALOGW("bt_stack_on_stream_suspended status = %d, ack_status = %d ", status, audio_stream.ack_status);
     pthread_mutex_lock(&audio_stream.ack_lock);
-    audio_stream.ack_status = status;
+    if ((audio_stream.ack_status != A2DP_CTRL_ACK_UNKNOWN) && (status == A2DP_CTRL_ACK_PENDING)) {
+        ALOGW("status already changed to = %d, don't update pending",audio_stream.ack_status);
+    }
+    else {
+        audio_stream.ack_status = status;
+        ALOGW("bt_stack_on_stream_suspended updating  ack_status = %d ", audio_stream.ack_status);
+    }
     resp_received = true;
     if (!ack_recvd)
     {
         ack_recvd = 1;
+        ALOGW("bt_stack_on_stream_suspended signalling pthread ");
         pthread_cond_signal(&ack_cond);
     }
     pthread_mutex_unlock(&audio_stream.ack_lock);
+    ALOGW("bt_stack_on_stream_suspended mutex unlocked ");
 }
 
 void bt_stack_on_stream_stopped(tA2DP_CTRL_ACK status)
 {
     ALOGW("bt_stack_on_stream_stopped");
     pthread_mutex_lock(&audio_stream.ack_lock);
-    audio_stream.ack_status = status;
+    if ((audio_stream.ack_status != A2DP_CTRL_ACK_UNKNOWN) && (status == A2DP_CTRL_ACK_PENDING)) {
+        ALOGW("status already changed to = %d, don't update pending",audio_stream.ack_status);
+    }
+    else {
+        audio_stream.ack_status = status;
+    }
     resp_received = true;
     if (!ack_recvd)
     {
@@ -1299,6 +1397,13 @@ bool audio_is_scrambling_enabled(void)
         usleep(100000);
     }
     if(status == A2DP_CTRL_ACK_SUCCESS) {
+
+        if (codec_type == CODEC_TYPE_CELT) {
+           INFO("%s: BA going on,return false", __func__);
+           pthread_mutex_unlock(&audio_stream.lock);
+           return false;
+        }
+
         ALOGW("audio_is_scrambling_enabled sample_freq %ld",sample_freq);
         switch (sample_freq) {
             case 44100:
