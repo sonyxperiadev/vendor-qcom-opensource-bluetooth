@@ -35,6 +35,8 @@
 ******************************************************************************/
 #define BT_AUDIO_HARDWARE_INTERFACE "libbthost"
 
+#define MAX_LEVELS 5
+
 typedef enum {
     A2DP_CTRL_CMD_NONE,
     A2DP_CTRL_CMD_CHECK_READY,
@@ -215,6 +217,15 @@ typedef struct {
     uint32_t bitrate;
 } audio_aptx_encoder_config_t;
 
+struct bit_rate_level_map_t {
+    uint32_t link_quality_level;
+    uint32_t bitrate;
+};
+
+struct quality_level_to_bitrate_info {
+    uint32_t num_levels;
+    struct bit_rate_level_map_t bit_rate_level_map[MAX_LEVELS];
+};
 
 /* Information about BT LDAC encoder configuration
  * This data is used between audio HAL module and
@@ -225,6 +236,8 @@ typedef struct {
     uint32_t bitrate;
     uint16_t channel_mode;
     uint16_t mtu;
+    bool is_abr_enabled;
+    struct quality_level_to_bitrate_info level_to_bitrate_map;
 } audio_ldac_encoder_config_t;
 
 /* Information about BT AAC encoder configuration

@@ -26,6 +26,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "ldac_level_bit_rate_lookup.h"
 #include "bthost_ipc.h"
 #include <errno.h>
 #include <inttypes.h>
@@ -1372,6 +1373,48 @@ void ldac_codec_parser(uint8_t *codec_cfg)
     ldac_codec.bitrate |= (*p_cfg++ << 16);
     ldac_codec.bitrate |= (*p_cfg++ << 24);
 
+    ldac_codec.is_abr_enabled = (ldac_codec.bitrate == 0);
+
+    ALOGW("Create Lookup for %d with ABR %d", ldac_codec.sampling_rate, ldac_codec.is_abr_enabled);
+    if (ldac_codec.sampling_rate == 44100 ||
+            ldac_codec.sampling_rate == 88200) {
+        int num_of_level_entries =
+            sizeof(bit_rate_level_44_1k_88_2k_database)/sizeof(bit_rate_level_44_1k_88_2k_table_t);
+        ldac_codec.level_to_bitrate_map.num_levels = num_of_level_entries;
+        if (ldac_codec.is_abr_enabled) {
+         ldac_codec.bitrate = bit_rate_level_44_1k_88_2k_database[0].bit_rate_value;
+         ALOGW("Send start highest bit-rate value %d", ldac_codec.bitrate);
+        }
+        for (int i = 0; i < num_of_level_entries; i++) {
+            ldac_codec.level_to_bitrate_map.bit_rate_level_map[i].link_quality_level =
+                bit_rate_level_44_1k_88_2k_database[i].level_value;
+            ldac_codec.level_to_bitrate_map.bit_rate_level_map[i].bitrate =
+                bit_rate_level_44_1k_88_2k_database[i].bit_rate_value;
+            ALOGW("Level: %d, bit-rate: %d",
+                ldac_codec.level_to_bitrate_map.bit_rate_level_map[i].link_quality_level,
+                ldac_codec.level_to_bitrate_map.bit_rate_level_map[i].bitrate);
+        }
+    } else if (ldac_codec.sampling_rate == 48000 ||
+            ldac_codec.sampling_rate == 96000) {
+        int num_of_level_entries =
+            sizeof(bit_rate_level_48k_96k_database)/sizeof(bit_rate_level_48k_96k_table_t);
+        ldac_codec.level_to_bitrate_map.num_levels = num_of_level_entries;
+        if (ldac_codec.is_abr_enabled) {
+         ldac_codec.bitrate = bit_rate_level_48k_96k_database[0].bit_rate_value;
+         ALOGW("Send start highest bit-rate value %d", ldac_codec.bitrate);
+        }
+        for (int i = 0; i < num_of_level_entries; i++) {
+            ldac_codec.level_to_bitrate_map.bit_rate_level_map[i].link_quality_level =
+                bit_rate_level_48k_96k_database[i].level_value;
+            ldac_codec.level_to_bitrate_map.bit_rate_level_map[i].bitrate =
+                bit_rate_level_48k_96k_database[i].bit_rate_value;
+            ALOGW("Level: %d, bit-rate: %d",
+                ldac_codec.level_to_bitrate_map.bit_rate_level_map[i].link_quality_level,
+                ldac_codec.level_to_bitrate_map.bit_rate_level_map[i].bitrate);
+        }
+    } else {
+        ALOGW("Unsupported Invalid frequency");
+    }
     ALOGW("%s: LDAC: bitrate: %lu", __func__, ldac_codec.bitrate);
     ALOGW("LDAC: Done copying full codec config");
 }
