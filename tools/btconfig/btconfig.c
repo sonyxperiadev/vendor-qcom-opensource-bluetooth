@@ -6832,8 +6832,8 @@ int main(int argc, char *argv[])
     }
 
 #ifdef ANDROID
-    property_get("ro.qualcomm.bt.hci_transport", prop, NULL);
-    property_get("qcom.bluetooth.soc", soc_type, NULL);
+    property_get("ro.vendor.qualcomm.bt.hci_transport", prop, NULL);
+    property_get("vendor.qcom.bluetooth.soc", soc_type, NULL);
 #endif
 
     if((!strcasecmp(soc_type, "rome")) || (!strcasecmp(soc_type, "cherokee")))

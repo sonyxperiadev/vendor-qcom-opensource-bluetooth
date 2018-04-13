@@ -66,7 +66,7 @@ public class BTCEventProvider extends BroadcastReceiver {
 
         if(btsoc.equals("invalid"))
         {
-            btsoc = SystemProperties.get("qcom.bluetooth.soc");
+            btsoc = SystemProperties.get("vendor.qcom.bluetooth.soc");
         }
         /* ignore the events for non atheroes BT SOCs */
         if (!btsoc.equals("ath3k")) {

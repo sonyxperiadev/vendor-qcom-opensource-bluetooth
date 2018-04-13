@@ -224,7 +224,7 @@ unsigned short int create_log_info(const char *tag, char *buff)
 static int init(void)
 {
     lib_log("%s", __func__);
-    logging_level = property_get_int32("persist.bt_logger.log_mask", 0xFFFF);
+    logging_level = property_get_int32("persist.vendor.bt_logger.log_mask", 0xFFFF);
 
     client_sock = connect_to_logger_server();
     if (client_sock < 0)

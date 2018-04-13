@@ -97,7 +97,7 @@ public class BTStateReceiver extends BroadcastReceiver{
                 String[] stack_list_tags = context.getResources().getStringArray(R.array.stack_list_tags);
                 String[] soc_list_names = context.getResources().getStringArray(R.array.soc_list_names);
                 String[] soc_list_tags = context.getResources().getStringArray(R.array.soc_list_tags);
-                bt_soc_type = SystemProperties.get("qcom.bluetooth.soc");
+                bt_soc_type = SystemProperties.get("vendor.qcom.bluetooth.soc");
                 if (file_global.exists()) {
                     Utils.setGlobalSettings(context);
                 } else if (file_stack.exists()) {

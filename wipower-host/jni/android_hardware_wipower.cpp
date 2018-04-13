@@ -177,7 +177,7 @@ static void android_wipower_wipowerJNI_classInitNative(JNIEnv* env, jclass clazz
     ALOGE("%s: succesfully executed",__FUNCTION__);
 
     char value[PROPERTY_VALUE_MAX];
-    property_get("bluetooth.mock_stack", value, "");
+    property_get("vendor.bluetooth.mock_stack", value, "");
 
     const char *id = (strcmp(value, "1")? BT_STACK_MODULE_ID : BT_STACK_TEST_MODULE_ID);
 

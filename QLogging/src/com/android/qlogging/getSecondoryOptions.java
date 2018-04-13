@@ -67,7 +67,7 @@ public class getSecondoryOptions extends Activity{
     public static ScrollView sv;
     public static String SOC_levels="";
     String mRome ="rome";
-    String bt_soc_type = SystemProperties.get("qcom.bluetooth.soc");
+    String bt_soc_type = SystemProperties.get("vendor.qcom.bluetooth.soc");
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
