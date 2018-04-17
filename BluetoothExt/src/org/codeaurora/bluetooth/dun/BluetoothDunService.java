@@ -257,7 +257,7 @@ public class BluetoothDunService extends Service {
     /**
      * String signifies the DUN profile status
      */
-    public static final String BLUETOOTH_DUN_PROFILE_STATUS = "bluetooth.dun.status";
+    public static final String BLUETOOTH_DUN_PROFILE_STATUS = "vendor.bluetooth.dun.status";
 
     public static final ParcelUuid DUN = ParcelUuid.fromString(DUN_UUID);
 
