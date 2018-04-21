@@ -38,7 +38,7 @@ import java.util.Map;
 
 public class MonkeyEvent {
 
-    private static final String TAG = "MonkeyEventStream";
+    private static final String TAG = "BtTestMonkeyEventStream";
 
     private static final String SEP = "~~";
 
