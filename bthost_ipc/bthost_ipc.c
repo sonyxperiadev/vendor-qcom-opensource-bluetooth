@@ -39,7 +39,7 @@
 #include <hardware/audio.h>
 
 #include <hardware/hardware.h>
-#include <utils/Log.h>
+#include <log/log.h>
 #include <cutils/properties.h>
 
 #ifdef LOG_TAG
