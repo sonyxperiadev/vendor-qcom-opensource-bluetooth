@@ -44,7 +44,6 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.content.res.Resources;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import org.codeaurora.bluetooth.R;
@@ -65,28 +64,22 @@ import javax.obex.ObexHelper;
 import android.bluetooth.BluetoothUuid;
 import android.content.SharedPreferences;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.HashSet;
 
 
 public class BluetoothFtpService extends Service {
-     private static final String TAG = "BluetoothFtpService";
-     public static final String LOG_TAG = "BluetoothFtp";
-
+    private static final String TAG = "BluetoothFtpService";
+    static final String LOG_TAG = "BluetoothFtp";
     /**
      * To enable FTP DEBUG/VERBOSE logging - run below cmd in adb shell, and
      * restart com.android.bluetooth process. only enable DEBUG log:
      * "setprop log.tag.BluetoothFtpService DEBUG"; enable both VERBOSE and
      * DEBUG log: "setprop log.tag.BluetoothFtpService VERBOSE"
      */
-
-    //public static final boolean DEBUG = false;
-
-    //public static final boolean VERBOSE = false;
-
-    public static final boolean DEBUG = true;
-    public static boolean VERBOSE = true;
+    static final boolean V = Log.isLoggable(BluetoothFtpService.LOG_TAG, Log.VERBOSE);
+    static final boolean DEBUG = true;
+    static boolean VERBOSE = true;
     private int mState;
 
     /**
@@ -256,20 +249,19 @@ public class BluetoothFtpService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.v(TAG, "Ftp Service onCreate");
+        Log.i(TAG, "onCreate");
 
         mAdapter = BluetoothAdapter.getDefaultAdapter();
 
         if (!mHasStarted) {
 
-            int state = mAdapter.getState();
-            Log.v(TAG, "FTP service not started Adapter STATE: "+state);
+            int state = getState();
+            Log.i(TAG, " not started Adapter STATE: "+state);
             if (state == BluetoothAdapter.STATE_ON) {
-                Log.v(TAG, "FTP service start listener");
                 mHasStarted = true;
                 if (mFtpReceiver == null) {
                     mFtpReceiver = new FtpBroadcastReceiver();
-                    IntentFilter filter = new IntentFilter();
+                    IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
                     filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
                     filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
                     registerReceiver(mFtpReceiver, filter);
@@ -282,13 +274,13 @@ public class BluetoothFtpService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.v(TAG, "Ftp Service onStartCommand");
+        Log.i(TAG, "onStartCommand");
         int retCode = super.onStartCommand(intent, flags, startId);
         if (retCode == START_STICKY) {
             mStartId = startId;
             if (mAdapter == null) {
-                Log.w(TAG, "Stopping BluetoothFtpService: "
-                        + "device does not have BT or device is not ready");
+                Log.w(TAG, "Stopping device does not "
+                        + "have BT or device is not ready");
                 // Release all resources
                 closeService();
             } else {
@@ -305,20 +297,13 @@ public class BluetoothFtpService extends Service {
     // process the intent from receiver
     private void parseIntent(final Intent intent) {
         String action = intent.getAction();
-        if (action == null) {
-            action = intent.getStringExtra("action");
-            if (action == null) {
-                Log.e(TAG, "Unexpected error! action is null");
-                return;
-            }
-        }
-        Log.v(TAG, "PARSE INTENT action: " + action);
-
+        Log.i(TAG, "action :" + action);
+        if(action == null) return;
         boolean removeTimeoutMsg = true;
         if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-            int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+            int state = getState();
             removeTimeoutMsg = false;
-            Log.d(TAG, "ACTION_STATE_CHANGED: state: " + state + " mHasStarted: " + mHasStarted);
+            Log.i(TAG, " state: " + state + " mHasStarted: " + mHasStarted);
             if ((state == BluetoothAdapter.STATE_TURNING_OFF) && (mAdapter != null)) {
                 /** Terminate file copy operation if it is in progress */
                 FileUtils.interruptFileCopy = true;
@@ -332,8 +317,6 @@ public class BluetoothFtpService extends Service {
                 // Release all resources
                 closeService();
             } else if (state == BluetoothAdapter.STATE_ON && !mHasStarted ) {
-
-                Log.v(TAG, "FTP service start listener");
                 mHasStarted = true;
                 mSessionStatusHandler.sendMessage(mSessionStatusHandler
                         .obtainMessage(MSG_INTERNAL_START_LISTENER));
@@ -341,7 +324,7 @@ public class BluetoothFtpService extends Service {
         } else if (action.equals(ACCESS_ALLOWED_ACTION)) {
             if (!isWaitingAuthorization) {
                 // this reply is not for us
-                Log.v(TAG, "isWaitingAuthorization =  " + isWaitingAuthorization);
+                Log.d(TAG, "isWaitingAuthorization =  " + isWaitingAuthorization);
                 return;
             }
 
@@ -350,7 +333,7 @@ public class BluetoothFtpService extends Service {
             if (intent.getBooleanExtra(BluetoothFtpService.EXTRA_ALWAYS_ALLOWED, false)) {
                 if(mRemoteDevice != null) {
                    setFtpAccessPermission(mRemoteDevice, BluetoothDevice.ACCESS_ALLOWED);
-                   Log.v(TAG, "setFtpAccessPermission() ACCESS_ALLOWED " + mRemoteDevice.getName());
+                   Log.i(TAG, "setFtpAccessPermission() ACCESS_ALLOWED " + mRemoteDevice.getName());
                 }
             }
 
@@ -365,7 +348,6 @@ public class BluetoothFtpService extends Service {
             }
             removeFtpNotification(NOTIFICATION_ID_ACCESS);
         } else if (action.equals(ACCESS_DISALLOWED_ACTION)) {
-            Log.v(TAG, "ACCESS_DISALLOWED_ACTION");
             isWaitingAuthorization = false;
             stopObexServerSession();
         } else if (action.equals(AUTH_RESPONSE_ACTION)) {
@@ -395,12 +377,12 @@ public class BluetoothFtpService extends Service {
             if (intent.hasExtra(BluetoothDevice.EXTRA_DEVICE)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if(device != null)
-                    Log.d(TAG,"device: "+ device.getName());
+                    Log.i(TAG,"device: "+ device.getName());
 
                if ((device != null) &&
                 (intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE,
                                BluetoothDevice.BOND_NONE) == BluetoothDevice.BOND_NONE)) {
-                   Log.d(TAG,"BOND_STATE_CHANGED REFRESH trustDevices "+ device.getName());
+                   Log.i(TAG,"BOND_STATE_CHANGED REFRESH trustDevices "+ device.getName());
                    setFtpAccessPermission(device, BluetoothDevice.ACCESS_UNKNOWN);
                }
             }
@@ -415,32 +397,29 @@ public class BluetoothFtpService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.v(TAG, "Ftp Service onDestroy");
-
+        Log.i(TAG, "onDestroy");
         super.onDestroy();
         closeService();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.v(TAG, "Ftp Service onBind");
+        Log.i(TAG, "onBind");
         return null;
     }
 
     private void startRfcommSocketListener() {
-        VERBOSE = Log.isLoggable(BluetoothFtpService.LOG_TAG, Log.VERBOSE) ? true : false;
-
         if (mRfcommAcceptThread == null) {
-            Log.d(TAG, "Ftp Service startRfcommSocketListener");
+            Log.i(TAG, "startRfcommSocketListener");
             mRfcommAcceptThread = new RfcommSocketAcceptThread();
             mRfcommAcceptThread.setName("BluetoothFtpRfcommAcceptThread");
             mRfcommAcceptThread.start();
         } else {
-            Log.d(TAG, "Ftp Service Already ON: startRfcommSocketListener");
+            Log.i(TAG, "Already ON: startRfcommSocketListener");
         }
     }
     private final boolean initRfcommSocket() {
-        Log.v(TAG, "Ftp Service initSocket");
+        Log.i(TAG, "initSocket");
 
         boolean initSocketOK = false;
         final int CREATE_RETRY_TIME = 10;
@@ -463,7 +442,7 @@ public class BluetoothFtpService extends Service {
             if (!initSocketOK) {
                      // Need to break out of this loop if BT is being turned off.
                 if (mAdapter == null) break;
-                int state = mAdapter.getState();
+                int state = getState();
                 if ((state != BluetoothAdapter.STATE_TURNING_ON) &&
                         (state != BluetoothAdapter.STATE_ON)) {
                     Log.w(TAG, "initRfcommServerSocket failed as BT is (being) turned off");
@@ -471,10 +450,10 @@ public class BluetoothFtpService extends Service {
                 }
                 synchronized (this) {
                     try {
-                        Log.v(TAG, "wait 300 ms");
+                        Log.i(TAG, "wait 300 ms");
                         Thread.sleep(300);
                     } catch (InterruptedException e) {
-                        Log.e(TAG, "socketAcceptThread thread was interrupted (3)");
+                        Log.e(TAG, "socketAcceptThread thread was interrupted");
                         mInterrupted = true;
                     }
                 }
@@ -484,7 +463,7 @@ public class BluetoothFtpService extends Service {
         }
 
         if (initSocketOK && (mRfcommServerSocket != null) ) {
-            Log.v(TAG, "Succeed to create listening socket on channel " + PORT_NUM);
+            Log.i(TAG, "Succeed to create listening socket on channel " + PORT_NUM);
 
         } else {
             Log.e(TAG, "Error to create listening socket after " + CREATE_RETRY_TIME + " try");
@@ -511,21 +490,24 @@ public class BluetoothFtpService extends Service {
         }
     }
     private final void closeService() {
-        Log.v(TAG, "Ftp Service closeService mFtpReceiver :" + mFtpReceiver);
-
+        Log.i(TAG, "closeService");
+        unRegisterReceiver();
         try {
             closeRfcommSocket(true, false);
         } catch (IOException ex) {
             Log.e(TAG, "CloseSocket error: " + ex);
         }
-        if (mRfcommAcceptThread != null) {
-            try {
-                mRfcommAcceptThread.shutdown();
-                mRfcommAcceptThread.join();
-                mRfcommAcceptThread = null;
-            } catch (InterruptedException ex) {
-                Log.w(TAG, "mAcceptThread close error" + ex);
+        synchronized (BluetoothFtpService.this) {
+            if (mRfcommAcceptThread != null) {
+                try {
+                    mRfcommAcceptThread.shutdown();
+                    mRfcommAcceptThread.join();
+                    mRfcommAcceptThread = null;
+                } catch (InterruptedException ex) {
+                    Log.w(TAG, "mAcceptThread close error" + ex);
+                }
             }
+            Log.d(TAG, "mRfcommAcceptThread stopped");
         }
 
         try {
@@ -539,22 +521,24 @@ public class BluetoothFtpService extends Service {
             mServerSession = null;
         }
 
+        if (stopSelfResult(mStartId)) {
+            Log.i(TAG, "successfully stopped ");
+        }
+    }
+
+    private void unRegisterReceiver() {
         try {
             if (mFtpReceiver != null) {
                 unregisterReceiver(mFtpReceiver);
                 mFtpReceiver = null;
             }
         } catch (Exception e) {
-            Log.w(TAG, "Unable to unregister ftp receiver", e);
-        }
-
-        if (stopSelfResult(mStartId)) {
-            Log.v(TAG, "successfully stopped ftp service");
+            Log.w(TAG, "Unable to unregister", e);
         }
     }
 
     private final void startObexServerSession() throws IOException {
-        Log.v(TAG, "Ftp Service startObexServerSession");
+        Log.i(TAG, "startObexServerSession");
 
         mFtpServer = new BluetoothFtpObexServer(mSessionStatusHandler, this);
         synchronized (this) {
@@ -578,23 +562,20 @@ public class BluetoothFtpService extends Service {
            throw new IOException("no transport channel  available");
         }
         mServerSession = new ServerSession(transport, mFtpServer, mAuth);
-
-        {
-            Log.v(TAG, "startObexServerSession() success!");
-        }
+        Log.i(TAG, "startObexServerSession success");
     }
 
     private void stopObexServerSession() {
-        Log.v(TAG, "Ftp Service stopObexServerSession");
+        Log.i(TAG, "stopObexServerSession");
 
         if (mServerSession != null) {
-            Log.v(TAG, "stopObexServerSession, closing mServerSession");
+            Log.d(TAG, "stopObexServerSession, closing mServerSession");
             mServerSession.close();
             mServerSession = null;
         }
 
         try {
-            Log.v(TAG, "stopObexServerSession, closeRfcommSocket");
+            Log.d(TAG, "stopObexServerSession, closeRfcommSocket");
             closeRfcommSocket(false, true);
         } catch (IOException e) {
             Log.e(TAG, "closeSocket error: " + e.toString());
@@ -604,7 +585,7 @@ public class BluetoothFtpService extends Service {
         // Last obex transaction is finished, we start to listen for incoming
         // connection again
         if (mAdapter.isEnabled()) {
-            Log.v(TAG, "stopObexServerSession, startRfcommSocketListener");
+            Log.d(TAG, "stopObexServerSession, startRfcommSocketListener");
             startRfcommSocketListener();
         }
     }
@@ -642,7 +623,7 @@ public class BluetoothFtpService extends Service {
     }
 
     private void notifyContentResolver(Uri uri) {
-        Log.v(TAG,"FTP_MEDIA_SCANNED deleting uri "+uri);
+        Log.i(TAG,"FTP_MEDIA_SCANNED deleting uri "+uri);
         ContentProviderClient client = getContentResolver()
                   .acquireContentProviderClient(MediaStore.AUTHORITY);
         if (client == null) {
@@ -654,7 +635,7 @@ public class BluetoothFtpService extends Service {
         } catch(RemoteException e){
             Log.e(TAG,e.toString());
         }
-        Log.v(TAG,"FTP_MEDIA_SCANNED deleted uri "+uri);
+        Log.i(TAG,"FTP_MEDIA_SCANNED deleted uri "+uri);
     }
 
     /**
@@ -666,8 +647,6 @@ public class BluetoothFtpService extends Service {
     private class RfcommSocketAcceptThread extends Thread {
 
         private boolean stopped = false;
-
-        private static final String RTAG = "BluetoothFtpService:RfcommSocketAcceptThread";
 
         @Override
         public void run() {
@@ -681,18 +660,18 @@ public class BluetoothFtpService extends Service {
 
             while (!stopped && mRfcommServerSocket != null) {
                 try {
-                    Log.v(RTAG,"Run Accept thread");
+                    Log.i(TAG,"Run Accept thread");
                     mConnSocket = mRfcommServerSocket.accept();
                     synchronized(BluetoothFtpService.this) {
                         if(mConnSocket == null){
-                            Log.i(RTAG, "mConnSocket = null");
+                            Log.d(TAG, "mConnSocket = null");
                             break;
                         }
                         isL2capSocket = false;
                         mRemoteDevice = mConnSocket.getRemoteDevice();
                     }
                     if (mRemoteDevice == null) {
-                        Log.i(RTAG, "getRemoteDevice() = null");
+                        Log.i(TAG, "getRemoteDevice() = null");
                         break;
                     }
                     sRemoteDeviceName = mRemoteDevice.getName();
@@ -707,36 +686,36 @@ public class BluetoothFtpService extends Service {
                     if (mRemoteDevice != null)
                        trust = getFtpAccessPermission(mRemoteDevice);
 
-                    Log.v(RTAG, "getFtpAccessPermission() = " + trust);
+                    Log.i(TAG, "getFtpAccessPermission() = " + trust);
 
                     if (trust == BluetoothDevice.ACCESS_ALLOWED) {
                         try {
-                            Log.i(RTAG, "incomming connection accepted from: "
+                            Log.i(TAG, "incomming connection accepted from: "
                                 + sRemoteDeviceName + " automatically as trusted device");
                             startObexServerSession();
                         } catch (IOException ex) {
-                            Log.e(RTAG, "catch exception starting obex server session"
+                            Log.e(TAG, "catch exception starting obex server session"
                                     + ex.toString());
                         }
                     } else if (trust == BluetoothDevice.ACCESS_UNKNOWN) {
                         isWaitingAuthorization = true;
                         createFtpNotification(ACCESS_REQUEST_ACTION);
-                        Log.i(RTAG, "waiting for authorization for connection from: "
+                        Log.i(TAG, "waiting for authorization for connection from: "
                                 + sRemoteDeviceName);
                         mSessionStatusHandler.sendMessageDelayed(mSessionStatusHandler
                                 .obtainMessage(MSG_INTERNAL_USER_TIMEOUT), USER_CONFIRM_TIMEOUT_VALUE);
                     }
                 } catch (IOException ex) {
                     stopped = true; //IO exception, close the thread
-                    Log.v(RTAG, "Accept exception: " + ex.toString());
+                    Log.i(TAG, "Accept exception: " + ex.toString());
                 }
-                Log.i(RTAG, "stopped = " + stopped +
+                Log.i(TAG, "stopped = " + stopped +
                     "  mRfcommServerSocket = " + mRfcommServerSocket);
             }
         }
 
         void shutdown() {
-            Log.e(RTAG,"Shutdown");
+            Log.w(TAG,"Shutdown");
             stopped = true;
             interrupt();
         }
@@ -745,7 +724,7 @@ public class BluetoothFtpService extends Service {
     private final Handler mSessionStatusHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            Log.v(TAG, "Handler(): got msg=" + msg.what);
+            Log.i(TAG, "Handler(): got msg=" + msg.what);
 
             switch (msg.what) {
                 case MSG_INTERNAL_START_LISTENER:
@@ -779,28 +758,24 @@ public class BluetoothFtpService extends Service {
                 case MSG_SESSION_DISCONNECTED:
                     break;
                 case MSG_FILE_RECEIVED:
-                    Log.v(TAG,"MSG_FILE_RECEIVED");
                     Bundle arguments = (Bundle) msg.obj;
                     notifyMediaScanner(arguments,FTP_MEDIA_ADD);
                     break;
                 case MSG_FILE_DELETED:
-                    Log.v(TAG,"MSG_FILE_DELETED");
                     Bundle delarguments = (Bundle) msg.obj;
                     notifyMediaScanner(delarguments,FTP_MEDIA_DELETE);
                     break;
                 case MSG_FILES_DELETED:
-                    Log.v(TAG,"MSG_FILES_DELETED");
                     Bundle delfilesarguments = (Bundle) msg.obj;
                     notifyMediaScanner(delfilesarguments,FTP_MEDIA_FILES_DELETE);
                     break;
                 case MSG_FILES_RECEIVED:
-                    Log.v(TAG,"MSG_FILES_RECEIVED");
                     Bundle newfilearguments = (Bundle) msg.obj;
                     notifyMediaScanner(newfilearguments,FTP_MEDIA_FILES_ADD);
                     break;
 
                 case FTP_MEDIA_SCANNED:
-                    Log.v(TAG,"FTP_MEDIA_SCANNED arg1 "+msg.arg1);
+                    Log.v(TAG,"FTP_MEDIA_SCANNED arg1 " + msg.arg1);
                     Uri uri = (Uri)msg.obj;
                     /* If the media scan was for a
                      * Deleted file Delete the entry
@@ -811,7 +786,6 @@ public class BluetoothFtpService extends Service {
                     }
                     break;
                 case MSG_INTERNAL_OBEX_RFCOMM_SESSION_UP:
-                    Log.v(TAG,"MSG_INTERNAL_OBEX_RFCOMM_SESSION_UP");
                     /*Avoid RfcommServer socket close to avoid SDP
                      *re-registration for every FTP connection request
                      */
@@ -876,7 +850,7 @@ public class BluetoothFtpService extends Service {
         Intent deleteIntent = new Intent();
         deleteIntent.setClass(this, BluetoothFtpReceiver.class);
 
-       Log.v(TAG,"createFtpNotification: action: "+action);
+       Log.i(TAG,"createFtpNotification: action: " + action);
         Notification notification = null;
         String name = getRemoteDeviceName();
         if (action.equals(ACCESS_REQUEST_ACTION)) {
@@ -931,6 +905,9 @@ public class BluetoothFtpService extends Service {
         return sRemoteDeviceName;
     }
 
+    private int getState() {
+        return (mAdapter != null) ? mAdapter.getState() : BluetoothAdapter.ERROR;
+    }
     public static class FtpMediaScannerNotifier implements MediaScannerConnectionClient {
 
         private MediaScannerConnection mConnection;
@@ -946,7 +923,7 @@ public class BluetoothFtpService extends Service {
             mContext = context;
             mCallback = handler;
             mOp = op;
-            Log.v(TAG, "FTP MediaScannerConnection FtpMediaScannerNotifier mFilename ="
+            Log.i(TAG, "FTP MediaScannerConnection FtpMediaScannerNotifier mFilename ="
                                 + filename + " mMimetype = " + mimetype +"operation " + mOp);
             List<String> filenames = new ArrayList<String>();
             List<String> types = new ArrayList<String>();
@@ -963,24 +940,19 @@ public class BluetoothFtpService extends Service {
             mContext = context;
             mCallback = handler;
             mOp = op;
-            Log.v(TAG, "FtpMediaScannerNotifier scan for multiple files " +
+            Log.i(TAG, "FtpMediaScannerNotifier scan for multiple files " +
                                                          filenames.length +" " +mimetypes.length );
             MediaScannerConnection.scanFile(context,filenames,mimetypes,
                                              this);
         }
 
         public void onMediaScannerConnected() {
-            Log.v(TAG, "FTP MediaScannerConnection onMediaScannerConnected");
+            Log.i(TAG, "onMediaScannerConnected");
         }
 
         public void onScanCompleted(String path, Uri uri) {
             try {
-                {
-                    Log.v(TAG, "FTP MediaScannerConnection onScanCompleted");
-                    Log.v(TAG, "FTP MediaScannerConnection path is " + path);
-                    Log.v(TAG, "FTP MediaScannerConnection Uri is " + uri);
-                    Log.v(TAG, "FTP MediaScannerConnection mOp is " + mOp);
-                }
+                Log.i(TAG, "onScanCompleted path :" + path + "\n URI " + uri + " mOp :" + mOp);
                 if (uri != null) {
                     Message msg = Message.obtain();
                     msg.setTarget(mCallback);
@@ -998,7 +970,7 @@ public class BluetoothFtpService extends Service {
             } catch (Exception ex) {
                 Log.e(TAG, "FTP !!!MediaScannerConnection exception: " + ex);
             } finally {
-                Log.v(TAG, "FTP MediaScannerConnection disconnect");
+                Log.i(TAG, "FTP MediaScannerConnection disconnect");
             }
         }
     };
