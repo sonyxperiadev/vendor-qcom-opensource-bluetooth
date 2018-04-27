@@ -52,8 +52,13 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 void create_log_node(bt_log_buffer_t *log_list, bt_log_node_t **ret_node)
 {
     bt_log_node_t *log_node = NULL;
+    static int create_new_nodes = 0;
 
-    if (log_list->buff_size > log_list->max_buff_size) {
+    if (log_list->buff_size >= log_list->max_buff_size) {
+        if(create_new_nodes) {
+            create_new_nodes = 0;
+            ALOGW("Started recycling nodes to save logs");
+        }
         pop_head_node(log_list, &log_node);
         if (log_node) {
             log_node->nxt_node = NULL;
@@ -64,6 +69,10 @@ void create_log_node(bt_log_buffer_t *log_list, bt_log_node_t **ret_node)
     }
 
     log_node = (bt_log_node_t*)calloc(1, sizeof(bt_log_node_t));
+    if(!create_new_nodes) {
+        create_new_nodes = 1;
+        ALOGW("Started creating new nodes to save logs");
+    }
 
     if (log_node == NULL) {
         ALOGE("Allocation failed for bt_log_node_t, returning!");
