@@ -1389,22 +1389,11 @@ bool audio_is_scrambling_enabled(void)
         ALOGW("audio_is_scrambling_enabled returned false due to stack deinit");
         return false;
     }
-    if( property_get("persist.vendor.bt.splita2dp.44_1_war", value, "true"))
-    {
-        if(!strcmp(value, "false"))
-        {
-            ALOGW("persist.vendor.bt.splita2dp.44_1_war is not set");
-            return false;
-        }
-    }
-    else
-    {
-        ALOGE("Error in fetching persist.vendor.bt.splita2dp.44_1_war property");
-        return false;
-    }
 
-    if( property_get("persist.vendor.bt.soc.scram_freqs", value, "false"))
+    if( property_get("persist.vendor.bluetooth.soc.scram_freqs", value, "false") &&
+        !strcmp(value, "false"))
     {
+        property_get("persist.vendor.bt.soc.scram_freqs", value, "false");
         if(!strcmp(value, "false"))
         {
             ALOGW("persist.vendor.bt.soc.scram_freqs is not set");
@@ -1413,7 +1402,7 @@ bool audio_is_scrambling_enabled(void)
     }
     else
     {
-        ALOGE("Error in fetching persist.vendor.bt.soc.scram_freqs property");
+        ALOGE("Error in fetching persist.vendor.bluetooth.soc.scram_freqs property");
         return false;
     }
 
