@@ -8,6 +8,7 @@ LOCAL_SRC_FILES := \
         $(call all-java-files-under, $(src_dirs)) \
 
 LOCAL_PACKAGE_NAME := HidTestApp
+LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_CERTIFICATE := platform
 
 LOCAL_PROGUARD_ENABLED := disabled

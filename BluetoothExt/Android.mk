@@ -10,6 +10,7 @@ LOCAL_SRC_FILES := \
         $(call all-java-files-under, $(src_dirs)) \
 
 LOCAL_PACKAGE_NAME := BluetoothExt
+LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_CERTIFICATE := platform
 LOCAL_JAVA_LIBRARIES := javax.obex
 LOCAL_JAVA_LIBRARIES += telephony-common
