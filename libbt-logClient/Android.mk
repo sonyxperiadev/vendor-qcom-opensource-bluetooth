@@ -9,7 +9,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_C_INCLUDES += \
         $(LOCAL_PATH)/include \
-        vendor/qcom/opensource/system/bt/include
+        vendor/qcom/opensource/commonsys/system/bt/include
 
 LOCAL_SHARED_LIBRARIES := \
         libcutils \
