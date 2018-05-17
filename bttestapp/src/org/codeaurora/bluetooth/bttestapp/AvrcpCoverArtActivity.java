@@ -44,6 +44,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Button;
@@ -98,6 +99,7 @@ public class AvrcpCoverArtActivity extends Activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_avrcp_coverart);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         mIvCoverArt = (ImageView) findViewById(R.id.id_iv_fullimage);
         mIvThumbNail = (ImageView) findViewById(R.id.id_iv_thumbnail);
         mBtnConfig = (Button) findViewById(R.id.id_btn_config);
