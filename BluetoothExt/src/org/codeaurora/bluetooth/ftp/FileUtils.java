@@ -244,12 +244,14 @@ public class FileUtils {
     /** Check the Available Space on External Storage */
     public static final boolean checkAvailableSpace(long filelength) {
         StatFs stat = new StatFs(BluetoothFtpObexServer.ROOT_FOLDER_PATH);
-        if (D) Log.d(TAG,"stat.getAvailableBlocks() "+ stat.getAvailableBlocks());
-        if (D) Log.d(TAG,"stat.getBlockSize() ="+ stat.getBlockSize());
-        long availabledisksize = stat.getBlockSize() * ((long)stat.getAvailableBlocks() - 4);
+        long availableBlocks = stat.getAvailableBlocksLong();
+        long getBlockSize = stat.getBlockSizeLong();
+        if (D) Log.d(TAG,"stat.getAvailableBlocks() "+ availableBlocks);
+        if (D) Log.d(TAG,"stat.getBlockSize() ="+ getBlockSize);
+        long availabledisksize = getBlockSize * (availableBlocks - 4);
         if (D) Log.d(TAG,"Disk size = " + availabledisksize + "File length = " + filelength);
-        if (stat.getBlockSize() * ((long)stat.getAvailableBlocks() - 4) <  filelength) {
-            if (D) Log.d(TAG,"Not Enough Space hence can't receive the file");
+        if (availabledisksize <  filelength) {
+            if (D) Log.d(TAG, "Not Enough Space hence can't receive the file");
             return false;
         } else {
             return true;
@@ -264,7 +266,6 @@ public class FileUtils {
             msg.what = msgtype;
             Bundle args = new Bundle();
             if(V) Log.e(TAG,"sendMessage "+name);
-            String path = "/" + "mnt"+ name;
             String mimeType = null;
 
             /* first we look for Mimetype in Android map */

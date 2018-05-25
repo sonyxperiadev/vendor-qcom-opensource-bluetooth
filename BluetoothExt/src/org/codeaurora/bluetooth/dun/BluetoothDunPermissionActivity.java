@@ -102,6 +102,8 @@ public class BluetoothDunPermissionActivity extends AlertActivity implements
         super.onCreate(savedInstanceState);
         Intent i = getIntent();
         String action = i.getAction();
+        if (V) Log.v(TAG , "action :" + action);
+        if (action == null) return;
         if (BluetoothDunService.DUN_ACCESS_REQUEST_ACTION.equals(action)) {
             showDunDialog(DIALOG_YES_NO_CONNECT);
             mCurrentDialog = DIALOG_YES_NO_CONNECT;

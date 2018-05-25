@@ -33,48 +33,27 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import android.os.SystemProperties;
 
 public class BluetoothDunReceiver extends BroadcastReceiver {
 
     private static final String TAG = "BluetoothDunReceiver";
 
-    private static final boolean V = BluetoothDunService.VERBOSE;
-
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        Log.d(TAG, "DunReceiver onReceive enter");
-
-        Intent in = new Intent();
-        in.putExtras(intent);
-        in.setClass(context, BluetoothDunService.class);
         String action = intent.getAction();
-        in.putExtra("action", action);
-        Log.d(TAG,"action = " + action);
-        if (action == null) return; /* Nothing to do */
-
-        boolean startService = true;
-
-        if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-            int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-            in.putExtra(BluetoothAdapter.EXTRA_STATE, state);
-            Log.d(TAG," Bluetooth Adapter state = " + state);
-            if ((state == BluetoothAdapter.STATE_TURNING_ON)
-                    || (state == BluetoothAdapter.STATE_OFF)) {
-                startService = false;
-            }
-        } else {
-            // Don't forward intent unless device has bluetooth and bluetooth is enabled.
-            BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-            if (adapter == null || !adapter.isEnabled()) {
-                startService = false;
-            }
+        Log.i(TAG, " action :" + action);
+        if(action == null) return;
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        if (adapter == null) {
+            Log.w(TAG, " adapter null "); return;
         }
-        if (startService) {
-            if (V) Log.v(TAG,"Calling DUN service start service with action = " + in.getAction());
-            context.startService(in);
+        Log.i(TAG, " State :" + adapter.getState());
+        if (adapter.isEnabled()) {
+            Intent intentDun = new Intent(context, BluetoothDunService.class);
+            intentDun.setAction(action);
+            context.startService(intentDun);
         }
-        Log.d(TAG, "DunReceiver onReceive exit");
+        Log.i(TAG, "exit");
     }
 }

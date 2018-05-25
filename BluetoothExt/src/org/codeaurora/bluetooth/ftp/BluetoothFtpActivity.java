@@ -64,7 +64,7 @@ public class BluetoothFtpActivity extends AlertActivity implements
         DialogInterface.OnClickListener, Preference.OnPreferenceChangeListener, TextWatcher {
     private static final String TAG = "BluetoothFtpActivity";
 
-    private static final boolean V = Log.isLoggable(BluetoothFtpService.LOG_TAG, Log.VERBOSE) ? true : false;
+    private static final boolean V = BluetoothFtpService.V;
 
     private static final int BLUETOOTH_OBEX_AUTHKEY_MAX_LENGTH = 16;
 
@@ -110,7 +110,8 @@ public class BluetoothFtpActivity extends AlertActivity implements
         super.onCreate(savedInstanceState);
         Intent i = getIntent();
         String action = i.getAction();
-        if(V) Log.v(TAG,"onCreate action = "+ action);
+        Log.i(TAG," action = "+ action);
+        if (action == null) return;
         if (action.equals(BluetoothFtpService.ACCESS_REQUEST_ACTION )) {
             showFtpDialog(DIALOG_YES_NO_CONNECT);
             mCurrentDialog = DIALOG_YES_NO_CONNECT;
@@ -122,7 +123,6 @@ public class BluetoothFtpActivity extends AlertActivity implements
                     + "FTP_ACCESS_REQUEST or FTP_AUTH_CHALL ");
             finish();
         }
-        Log.i(TAG,"onCreate");
         registerReceiver(mReceiver, new IntentFilter(
                 BluetoothFtpService.USER_CONFIRM_TIMEOUT_ACTION));
     }

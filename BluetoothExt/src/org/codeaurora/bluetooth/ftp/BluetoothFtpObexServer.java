@@ -72,7 +72,7 @@ public class BluetoothFtpObexServer extends ServerRequestHandler {
 
     private static final boolean D = BluetoothFtpService.DEBUG;
 
-    private static final boolean V = Log.isLoggable(BluetoothFtpService.LOG_TAG, Log.VERBOSE) ? true : false;
+    private static final boolean V = BluetoothFtpService.VERBOSE;
 
     private static final int UUID_LENGTH = 16;
 

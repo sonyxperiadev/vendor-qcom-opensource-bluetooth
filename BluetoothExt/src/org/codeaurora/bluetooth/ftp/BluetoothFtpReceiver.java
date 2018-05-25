@@ -28,58 +28,30 @@
  */
 package org.codeaurora.bluetooth.ftp;
 import android.bluetooth.BluetoothAdapter;
-import android.content.Intent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
-import android.os.SystemProperties;
 
 public class BluetoothFtpReceiver extends BroadcastReceiver {
 
         private static final String TAG = "BluetoothFtpReceiver";
 
-        private static final boolean V = Log.isLoggable(BluetoothFtpService.LOG_TAG, Log.VERBOSE) ? true : false;
-
         @Override
         public void  onReceive  (Context context, Intent intent) {
-
-            Log.d(TAG,"BluetoothFtpReceiver onReceive :" + intent.getAction());
-
-            Intent in = new Intent();
-            in.putExtras(intent);
-            in.setClass(context, BluetoothFtpService.class);
             String action = intent.getAction();
-            in.putExtra("action",action);
-            if (action == null) return; /* Nothing to do */
-
-            boolean startService = true;
-            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-                int state = in.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-                Log.d(TAG," Bluetooth Adapter state = " + state);
-                /*
-                 * Other than Tranistioning state, start the FTP service whenever
-                 * BT transitioned to OFF/ON, or Adapter returns error
-                 */
-                if(V) Log.v(TAG,"BluetoothFtpReceiver  Action: " + intent.getAction()
-                             + "STATE: " + state);
-                if ((state == BluetoothAdapter.STATE_TURNING_ON)
-                    || (state == BluetoothAdapter.STATE_OFF)) {
-                    startService = false;
-                }
-            } else {
-                // Don't forward intent unless device has bluetooth and bluetooth is enabled.
-                BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-                if (adapter == null || !adapter.isEnabled()) {
-                startService = false;
-                }
-                if(V) Log.v(TAG,"BluetoothFtpReceiver  Action: " + intent.getAction()
-                             + "startSeervice : " + startService);
+            Log.i(TAG, " action :" + action);
+            if(action == null) return;
+            BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+            if (adapter == null) {
+                Log.w(TAG, " adapter null "); return;
             }
-
-            if (startService) {
-                if(V) Log.v(TAG,"BluetoothFtpReceiver Start Service");
-                context.startService(in);
+            Log.i(TAG, "State :" + adapter.getState());
+            if (adapter.isEnabled()) {
+                Intent intentFtp = new Intent(context, BluetoothFtpService.class);
+                intentFtp.setAction(action);
+                context.startService(intentFtp);
             }
-            Log.d(TAG, "BluetoothFtpReceiver onReceive exit");
+            Log.i(TAG, "exit");
         }
 }

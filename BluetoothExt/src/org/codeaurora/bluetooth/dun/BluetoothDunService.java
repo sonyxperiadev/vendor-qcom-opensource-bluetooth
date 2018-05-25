@@ -54,7 +54,6 @@ import java.util.HashSet;
 import java.util.List;
 import android.bluetooth.BluetoothAdapter;
 import android.os.SystemProperties;
-import android.app.Service;
 import android.bluetooth.IBluetooth;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
@@ -318,8 +317,8 @@ public class BluetoothDunService extends Service {
     public void onCreate() {
 
         super.onCreate();
-        VERBOSE = Log.isLoggable(LOG_TAG, Log.VERBOSE) ? true : false;
-        if (VERBOSE) Log.v(TAG, "Dun Service onCreate");
+        VERBOSE = Log.isLoggable(LOG_TAG, Log.VERBOSE);
+        if (VERBOSE) Log.v(TAG, "onCreate");
 
         mDunDevices = new HashMap<BluetoothDevice, BluetoothDunDevice>();
 
@@ -340,7 +339,7 @@ public class BluetoothDunService extends Service {
 
         if (mDunReceiver == null) {
             mDunReceiver = new DunBroadcastReceiver();
-            IntentFilter filter = new IntentFilter();
+            IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
             filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
             filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
             registerReceiver(mDunReceiver, filter);
@@ -353,8 +352,7 @@ public class BluetoothDunService extends Service {
         mInterrupted = false;
 
         if (mAdapter == null) {
-            Log.w(TAG, "Stopping BluetoothDunService: "
-                    + "device does not have BT or device is not ready");
+            Log.w(TAG, "Device does not have BT or device is not ready");
             // Release all resources
             closeDunService();
         } else {
@@ -367,7 +365,7 @@ public class BluetoothDunService extends Service {
 
     @Override
     public void onDestroy() {
-        if (VERBOSE) Log.v(TAG, "Dun Service onDestroy");
+        if (VERBOSE) Log.v(TAG, "onDestroy");
 
         super.onDestroy();
 
@@ -390,7 +388,7 @@ public class BluetoothDunService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        if (VERBOSE) Log.v(TAG, "Dun Service onBind");
+        if (VERBOSE) Log.v(TAG, "onBind");
         return mDunBinder;
     }
 
@@ -405,7 +403,7 @@ public class BluetoothDunService extends Service {
 
         @Override
         public void handleMessage(Message msg) {
-            Log.i(TAG, "DunServiceMessageHandler: " +  msg.what);
+            Log.i(TAG, "MessageHandler: " +  msg.what);
             switch (msg.what) {
                 case MESSAGE_START_LISTENER:
                     if (mAdapter.isEnabled()) {
@@ -430,11 +428,11 @@ public class BluetoothDunService extends Service {
                     closeRfcommSocket();
                     startRfcommListenerThread();
 
-                    if (VERBOSE) Log.v(TAG, "DUN user Authorization Timeout");
+                    if (VERBOSE) Log.v(TAG, "Authorization Timeout");
                     break;
                  default:
                     if (VERBOSE)
-                        Log.v(TAG, "DunServiceMessageHandler: " +  msg.what + " not handled");
+                        Log.v(TAG, " MessageHandler: " +  msg.what + " not handled");
                     break;
             }
         }
@@ -444,19 +442,13 @@ public class BluetoothDunService extends Service {
     private void parseIntent(final Intent intent) {
 
         String action = intent.getAction();
-        if (action == null) {
-            action = intent.getStringExtra("action");
-            if (action == null) {
-                Log.e(TAG, "Unexpected error! action is null");
-                return;
-            }
-        }
-        Log.d(TAG, "parseIntent: action: " + action);
+        Log.i(TAG, "action :" + action);
         if (action == null) return;  /* Nothing to do */
 
         boolean removeTimeoutMsg = true;
-        if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-            int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+        if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)
+                || action.equals(Intent.ACTION_BOOT_COMPLETED)) {
+            int state = getState();
             if (VERBOSE) Log.v(TAG, "parseIntent: state: " + state);
             if ((state == BluetoothAdapter.STATE_ON) && (!mDunEnable)) {
                 synchronized(mConnection) {
@@ -467,7 +459,7 @@ public class BluetoothDunService extends Service {
                             bindIntent.setComponent(comp);
                             if (comp == null || !bindServiceAsUser(bindIntent, mConnection, 0,
                                     android.os.Process.myUserHandle())) {
-                                Log.e(TAG, "Could not bind to Bluetooth Dun Service with " + bindIntent);
+                                Log.e(TAG, "Could not bind with " + bindIntent);
                                 return;
                             }
                         }
@@ -477,12 +469,12 @@ public class BluetoothDunService extends Service {
                     }
                 }
 
-                Log.v(TAG, "Starting DUN server process");
+                Log.v(TAG, "Starting server process");
                 try {
                     SystemProperties.set(BLUETOOTH_DUN_PROFILE_STATUS, "running");
                     mDunEnable = true;
                 } catch (RuntimeException e) {
-                    Log.v(TAG, "Could not start DUN server process: " + e);
+                    Log.v(TAG, "Could not start server process: " + e);
                 }
 
                 if (mDunEnable) {
@@ -511,11 +503,11 @@ public class BluetoothDunService extends Service {
                 }
 
                 if (mDunEnable) {
-                    Log.v(TAG, "Stopping DUN server process");
+                    Log.v(TAG, "Stopping process");
                     try {
                         SystemProperties.set(BLUETOOTH_DUN_PROFILE_STATUS, "stopped");
                     } catch (RuntimeException e) {
-                        Log.v(TAG, "Could not stop DUN server process: " + e);
+                        Log.v(TAG, "Could not stop process: " + e);
                     }
 
                     synchronized(mConnection) {
@@ -557,7 +549,6 @@ public class BluetoothDunService extends Service {
                 }
             }
         } else if (action.equals(DUN_ACCESS_ALLOWED_ACTION)) {
-            if (VERBOSE) Log.v(TAG, "DunService-Received ACCESS_ALLOWED_ACTION");
 
             if (mRemoteDevice == null) {
                Log.e(TAG, "Unexpected error!");
@@ -619,6 +610,10 @@ public class BluetoothDunService extends Service {
         }
     }
 
+    private int getState() {
+        return (mAdapter != null) ? mAdapter.getState() : BluetoothAdapter.ERROR;
+    }
+
     private void startRfcommListenerThread() {
         Log.i(TAG, "startRfcommListenerThread " + mAcceptThread);
 
@@ -642,7 +637,7 @@ public class BluetoothDunService extends Service {
     }
 
     private void startUplinkThread() {
-        if (VERBOSE) Log.v(TAG, "DUN Service startUplinkThread");
+        if (VERBOSE) Log.v(TAG, "startUplinkThread");
 
         synchronized(mUplinkLock) {
             if (mUplinkThread != null) {
@@ -663,7 +658,7 @@ public class BluetoothDunService extends Service {
     }
 
     private void startDownlinkThread() {
-        if (VERBOSE) Log.v(TAG, "DUN Service startDownlinkThread");
+        if (VERBOSE) Log.v(TAG, "startDownlinkThread");
 
         synchronized(mDownlinkLock) {
             if (mDownlinkThread == null) {
@@ -675,7 +670,7 @@ public class BluetoothDunService extends Service {
     }
 
     private void startMonitorThread() {
-        if (VERBOSE) Log.v(TAG, "DUN Service startMonitorThread");
+        if (VERBOSE) Log.v(TAG, "startMonitorThread");
 
         synchronized(mMonitorLock) {
             if (mMonitorThread  == null) {
@@ -687,7 +682,7 @@ public class BluetoothDunService extends Service {
     }
 
     private final boolean initRfcommSocket() {
-        if (VERBOSE) Log.v(TAG, "Dun Service initRfcommSocket");
+        if (VERBOSE) Log.v(TAG, "initRfcommSocket");
 
         boolean initRfcommSocketOK = false;
         final int CREATE_RETRY_TIME = 10;
@@ -719,7 +714,7 @@ public class BluetoothDunService extends Service {
                     if (VERBOSE) Log.v(TAG, "wait 300 ms");
                     Thread.sleep(300);
                 } catch (InterruptedException e) {
-                    Log.e(TAG, "socketAcceptThread thread was interrupted (3)");
+                    Log.e(TAG, "socketAcceptThread thread was interrupted");
                     break;
                 }
             } else {
@@ -733,7 +728,7 @@ public class BluetoothDunService extends Service {
             closeListenSocket();
         }
 
-        if (initRfcommSocketOK) {
+        if (initRfcommSocketOK && mListenSocket != null) {
             Log.d(TAG, "Succeed to create listening socket ");
 
         } else {
@@ -743,7 +738,7 @@ public class BluetoothDunService extends Service {
     }
 
     private final boolean initDundClientSocket() {
-        if (VERBOSE) Log.v(TAG, "DUN initDundClientSocket");
+        if (VERBOSE) Log.v(TAG, "initDundClientSocket");
 
         boolean initDundSocketOK = false;
 
@@ -805,7 +800,7 @@ public class BluetoothDunService extends Service {
     }
 
     private final void closeDunService() {
-        Log.d(TAG, "Dun Service closeDunService in mDunReceiver :" + mDunReceiver);
+        Log.d(TAG, "closeDunService");
 
         // exit initRfcommSocket early
         mInterrupted = true;
@@ -877,7 +872,7 @@ public class BluetoothDunService extends Service {
 
         stopSelf();
 
-        Log.d(TAG, "Dun Service closeDunService out");
+        Log.d(TAG, "closeDunService out");
     }
 
     private void createDunNotification(BluetoothDevice device) {

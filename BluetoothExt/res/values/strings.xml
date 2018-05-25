@@ -21,4 +21,35 @@
     <!-- Bluetooth FTP or MAP permission Alert Activity checkbox text [CHAR LIMIT=none] -->
     <string name="bluetooth_remember_choice">Always Allow</string>
 
+    <!-- DUN -->
+    <string name="dun_notif_ticker">Bluetooth DUN request</string>
+    <!-- Notification title when a Bluetooth device wants to pair with us -->
+    <string name="dun_notif_title">Session Key Request for DUN</string>
+    <!-- Notification message when a Bluetooth device wants to pair with us -->
+    <string name="dun_notif_message">"Touch to connect to \u0022<xliff:g id="device_name">%1$s</xliff:g>\u0022."</string>
+    <string name="dun_acceptance_timeout_message">There was time out to accept connection with %1$s</string>
+    <!-- Activity label of BluetoothDunPermissionActivity, also used as Strings in the permission dialog [CHAR LIMIT=none] -->
+    <string name="bluetooth_dun_request">"DUN request"</string>
+    <!-- Bluetooth DUN permission Alert Activity text [CHAR LIMIT=none] -->
+    <string name="bluetooth_dun_acceptance_dialog_text">%1$s would like to use DUN. Give access to %2$s?</string>
+    <string name="dun_notification_group">"Dial Up Network"</string>
+
+    <!-- FTP -->
+    <string name="ftp_acceptance_dialog_title">%1$s would like to access your phone folders. Give access to %2$s?</string>
+    <string name="ftp_acceptance_dialog_header">Phone Folder Access</string>
+    <string name="ftp_session_key_dialog_title">Type session key for %1$s</string>
+    <string name="ftp_session_key_dialog_header">Bluetooth session key required</string>
+    <string name="ftp_acceptance_timeout_message">There was time out to accept connection with %1$s</string>
+    <string name="ftp_authentication_timeout_message">There was time out to input session key with %1$s</string>
+    <string name="ftp_notif_ticker">Bluetooth connection request</string>
+    <!-- Notification title when a Bluetooth device wants to pair with us -->
+    <string name="ftp_notif_title">Session Key Request for FTP</string>
+    <!-- Notification message when a Bluetooth device wants to pair with us -->
+    <string name="ftp_notif_message">"Touch to connect to \u0022<xliff:g id="device_name">%1$s</xliff:g>\u0022."</string>
+    <!-- Activity label of BluetoothFtpPermissionActivity, also used as Strings in the permission dialog [CHAR LIMIT=none] -->
+    <string name="bluetooth_ftp_request">"FTP request"</string>
+
+    <!-- Bluetooth FTP permission Alert Activity text [CHAR LIMIT=none] -->
+    <string name="bluetooth_ftp_acceptance_dialog_text">%1$s would like to access your files and folders. Give access to %2$s?</string>
+    <string name="ftp_notification_group">"File transfer"</string>
 </resources>
