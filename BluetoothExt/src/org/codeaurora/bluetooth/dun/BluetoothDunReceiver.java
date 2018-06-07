@@ -52,6 +52,7 @@ public class BluetoothDunReceiver extends BroadcastReceiver {
         if (adapter.isEnabled()) {
             Intent intentDun = new Intent(context, BluetoothDunService.class);
             intentDun.setAction(action);
+            intentDun.putExtras(intent);
             context.startService(intentDun);
         }
         Log.i(TAG, "exit");
