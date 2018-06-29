@@ -62,6 +62,11 @@ public class AvrcpCoverArtActivity extends Activity
     private final String EXTRA_PLAYBACK =
             "android.bluetooth.avrcp-controller.profile.extra.PLAYBACK";
     private final String EXTRA_METADATA_IS_INVALID_HANDLE = "is_invalid_handle";
+    private final String KEY_IMGTYPE = "persist.vendor.service.bt.avrcpct.imgtype";
+    private final String KEY_IMG_ENCODE = "persist.vendor.service.bt.avrcpct.imgencode";
+    private final String KEY_IMG_WIDTH = "persist.vendor.service.bt.avrcpct.imgwidth";
+    private final String KEY_IMG_HEIGHT = "persist.vendor.service.bt.avrcpct.imgheight";
+    private final String KEY_IMG_SIZE = "persist.vendor.service.bt.avrcpct.imgsize";
 
     private String mAlbumTitle = "";
 
@@ -174,44 +179,38 @@ public class AvrcpCoverArtActivity extends Activity
     @Override
     public void onClick(View v) {
         if (v == mBtnConfig) {
-            SystemProperties.set("persist.service.bt.avrcpct.imgtype",
-                    getValue(mSpImgType));
-            SystemProperties.set("persist.service.bt.avrcpct.imgencode",
-                    getValue(mSpImgEncode));
-            SystemProperties.set("persist.service.bt.avrcpct.imgwidth",
-                    getValue(mSpImgWidth));
-            SystemProperties.set("persist.service.bt.avrcpct.imgheight",
-                    getValue(mSpImgheight));
-            SystemProperties.set("persist.service.bt.avrcpct.imgsize",
-                    getValue(mSpImgSize));
+            SystemProperties.set(KEY_IMGTYPE, getValue(mSpImgType));
+            SystemProperties.set(KEY_IMG_ENCODE, getValue(mSpImgEncode));
+            SystemProperties.set(KEY_IMG_WIDTH, getValue(mSpImgWidth));
+            SystemProperties.set(KEY_IMG_HEIGHT, getValue(mSpImgheight));
+            SystemProperties.set(KEY_IMG_SIZE, getValue(mSpImgSize));
         } else if (v == mBtnConfigBase) {
-            SystemProperties.set("persist.service.bt.avrcpct.imgtype", "Image");
-            SystemProperties.set("persist.service.bt.avrcpct.imgencode", "JPEG");
-            SystemProperties.set("persist.service.bt.avrcpct.imgwidth", "500");
-            SystemProperties.set("persist.service.bt.avrcpct.imgheight", "500");
-            SystemProperties.set("persist.service.bt.avrcpct.imgsize", "200000");
+            SystemProperties.set(KEY_IMGTYPE, "Image");
+            SystemProperties.set(KEY_IMG_ENCODE, "JPEG");
+            SystemProperties.set(KEY_IMG_WIDTH, "500");
+            SystemProperties.set(KEY_IMG_HEIGHT, "500");
+            SystemProperties.set(KEY_IMG_SIZE, "200000");
             setSpinners();
         }
     }
 
     private void setSpinners() {
-        String type = SystemProperties.get("persist.service.bt.avrcpct.imgtype");
+        String type = SystemProperties.get(KEY_IMGTYPE);
         if (TextUtils.isEmpty(type) || type.equalsIgnoreCase("Image")) {
             mSpImgType.setSelection(0);
         } else {
             mSpImgType.setSelection(1);
         }
-        String mime = SystemProperties.get("persist.service.bt.avrcpct.imgencode");
+        String mime = SystemProperties.get(KEY_IMG_ENCODE);
         if (TextUtils.isEmpty(mime) || mime.equalsIgnoreCase("JPEG")) {
             mSpImgEncode.setSelection(0);
         } else {
             mSpImgEncode.setSelection(1);
         }
 
-        int height = SystemProperties.getInt("persist.service.bt.avrcpct.imgheight", 500);
-        int width = SystemProperties.getInt("persist.service.bt.avrcpct.imgwidth", 500);
-        int maxSize = SystemProperties.getInt("persist.service.bt.avrcpct.imgsize",
-                200000);
+        int height = SystemProperties.getInt(KEY_IMG_HEIGHT, 500);
+        int width = SystemProperties.getInt(KEY_IMG_WIDTH, 500);
+        int maxSize = SystemProperties.getInt(KEY_IMG_SIZE, 200000);
         Log.i(TAG, " Type :" + type + " Mime :" + mime + " Height:" + height + ": width :"
                 + width + " Max size:" + maxSize);
         mSpImgWidth.setSelection(getIndex(mSpImgWidth, width + ""));

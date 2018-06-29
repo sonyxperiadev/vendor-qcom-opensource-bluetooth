@@ -86,6 +86,7 @@ public class MainActivity extends MonkeyActivity {
     private final String UUID_AVRCP_TARGET = "0000110C-0000-1000-8000-00805F9B34FB";
     private final String UUID_AUDIO_SOURCE = "0000110A-0000-1000-8000-00805F9B34FB";
     private final String UUID_AUDIO_SINK = "0000110B-0000-1000-8000-00805F9B34FB";
+    private final String KEY_A2DP_SINK = "persist.vendor.service.bt.a2dp.sink";
 
     private final BroadcastReceiver mPickerReceiver = new BroadcastReceiver() {
 
@@ -295,8 +296,7 @@ public class MainActivity extends MonkeyActivity {
 
     public void onRadioButtonClicked(View v) {
         switch_time = System.currentTimeMillis();
-        boolean isA2dpSinkEnabled = SystemProperties.getBoolean("persist.service.bt.a2dp.sink",
-                false);
+        boolean isA2dpSinkEnabled = SystemProperties.getBoolean(KEY_A2DP_SINK, false);
 
         // Switch role to A2DP Source
         if (v.getId() == R.id.id_a2dp_source) {
@@ -305,8 +305,7 @@ public class MainActivity extends MonkeyActivity {
                 return;
             }
             Log.d(TAG, "Switch role to A2DP Source");
-            SystemProperties.set("persist.service.bt.a2dp.sink", false + "");
-            SystemProperties.set("persist.service.bt.avrcp.controller", false + "");
+            SystemProperties.set(KEY_A2DP_SINK, false + "");
 
         // Switch role to A2DP Sink
         } else if (v.getId() == R.id.id_a2dp_sink) {
@@ -315,8 +314,7 @@ public class MainActivity extends MonkeyActivity {
                 return;
             }
             Log.d(TAG, "Switch role to A2DP Sink");
-            SystemProperties.set("persist.service.bt.a2dp.sink", true + "");
-            SystemProperties.set("persist.service.bt.avrcp.controller", true + "");
+            SystemProperties.set(KEY_A2DP_SINK, true + "");
         }
         mSinkButton.setEnabled(false);
         mSourceButton.setEnabled(false);
