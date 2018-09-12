@@ -168,6 +168,7 @@ void listen_data(void)
     char buff[MAX_READ_LEN + 1];
 
     looper = 1;
+    log_list = NULL;
     init_list(&log_list, BT_LOGGER_BUFFER_LIMIT);
 
     if (!log_list) {
@@ -437,6 +438,7 @@ void *log_dump_thread(void *param)
     }
 
     free(log_list);
+    log_list = NULL;
     close(fd);
  exit:
     dump_logs_t = -1;
@@ -453,6 +455,7 @@ void dump_logs()
     if (pthread_create(&dump_logs_t, NULL, log_dump_thread, ( void*)log_list_dump)) {
         ALOGE("ERROR creating log dump thread");
     }else  {
+        log_list = NULL;
         init_list(&log_list, BT_LOGGER_BUFFER_LIMIT);
     }
 }
@@ -466,6 +469,7 @@ void dump_log_to_logcat()
         return;
     } else if ( !log_list->head) {
         free(log_list);
+        log_list = NULL;
         ALOGE("No Log to Dump to file");
         return;
     }
@@ -476,4 +480,5 @@ void dump_log_to_logcat()
         free_node(l_node);
     }
     free(log_list);
+    log_list = NULL;
 }
