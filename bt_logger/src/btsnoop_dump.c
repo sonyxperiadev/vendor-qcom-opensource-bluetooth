@@ -46,10 +46,12 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <private/android_filesystem_config.h>
 #include <android/log.h>
-
 #include <cutils/log.h>
+#include <cutils/properties.h>
 
-#define MAX_FILE_SIZE 1024*1024*20
+#define DEFAULT_FILE_SIZE_MB 20
+#define MAX_FILE_SIZE_MB 150
+#define MEGA_BYTE 1024*1024
 #define MAX_SNOOP_LOG_FILES 2
 
 #define LOGD0(t,s) __android_log_write(ANDROID_LOG_DEBUG, t, s)
@@ -58,10 +60,12 @@ static int file_descriptor = -1;
 uint32_t file_size = 0;
 pthread_t snoop_client_tid = -1;
 int btsnoop_socket = -1;
+uint32_t btsnoop_file_size = DEFAULT_FILE_SIZE_MB * MEGA_BYTE;
 
 #define LOCAL_SOCKET_NAME "bthcitraffic"
 #define BTSNOOP_PATH "/data/misc/bluetooth/logs"
 #define BTSOOP_PORT 8872
+#define BTSNOOP_MAX_PACKETS_PROPERTY "persist.bluetooth.btsnoopsize"
 
 //#define __SNOOP_DUMP_DBG__
 
@@ -294,7 +298,7 @@ int snoop_process (int sk)
     snoop_log("File Size = %d", file_size);
 #endif //__SNOOP_DUMP_DBG__
 
-    if (file_size > MAX_FILE_SIZE)
+    if (file_size > btsnoop_file_size)
     {
         if (file_descriptor != -1)
         {
@@ -328,8 +332,19 @@ int snoop_process (int sk)
 void *snoop_dump_thread( void *context)
 {
     int sk, ret, bytes_recv;
-
+    uint32_t input_file_size;
     snoop_log ("snoop_dump_thread starting");
+
+    input_file_size = property_get_int32(BTSNOOP_MAX_PACKETS_PROPERTY, DEFAULT_FILE_SIZE_MB);
+    if (input_file_size < DEFAULT_FILE_SIZE_MB) {
+        btsnoop_file_size = DEFAULT_FILE_SIZE_MB * MEGA_BYTE;
+    } else if (input_file_size > MAX_FILE_SIZE_MB){
+        btsnoop_file_size = MAX_FILE_SIZE_MB * MEGA_BYTE;
+    } else {
+        btsnoop_file_size = input_file_size * MEGA_BYTE;
+    }
+    snoop_log ("input_file_size read from prop: %d MB ,btsnoop_file_size set to : %d MB ",
+                          input_file_size , (btsnoop_file_size /(1024 *1024)));
 
     sk = snoop_connect_to_source();
 
