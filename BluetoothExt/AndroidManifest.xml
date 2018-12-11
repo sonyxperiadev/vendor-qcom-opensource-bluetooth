@@ -44,30 +44,6 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.MANAGE_NOTIFICATIONS"/>
     <application android:process="com.android.bluetooth">
-        <uses-library android:name="javax.obex" />
-        <activity android:name=".ftp.BluetoothFtpActivity"
-            android:process="@string/process"
-            android:excludeFromRecents="true"
-            android:enabled="@bool/profile_supported_ftp"
-            android:theme="@*android:style/Theme.Holo.Dialog.Alert">
-            <intent-filter>
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <service
-            android:process="@string/process"
-            android:name=".ftp.BluetoothFtpService"
-            android:enabled="@bool/profile_supported_ftp" >
-       </service>
-        <receiver
-            android:process="@string/process"
-            android:enabled="@bool/profile_supported_ftp"
-            android:name=".ftp.BluetoothFtpReceiver">
-            <intent-filter>
-                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED"/>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
         <activity android:name=".dun.BluetoothDunPermissionActivity"
             android:process="@string/process"
             android:excludeFromRecents="true"
