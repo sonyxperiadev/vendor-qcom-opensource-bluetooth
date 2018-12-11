@@ -999,7 +999,7 @@ public class BluetoothDunService extends Service {
                     }
                     stopped = true; // job done ,close this thread;
                     Log.i(TAG, "SocketAcceptThread stopped ");
-                } catch (IOException ex) {
+                } catch (IOException | NullPointerException ex) {
                     stopped=true;
                     Log.w(TAG, "Handled Accept thread exception: " + ex.toString());
                 }

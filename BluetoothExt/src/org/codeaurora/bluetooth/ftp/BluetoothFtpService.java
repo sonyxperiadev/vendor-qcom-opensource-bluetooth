@@ -707,7 +707,7 @@ public class BluetoothFtpService extends Service {
                         mSessionStatusHandler.sendMessageDelayed(mSessionStatusHandler
                                 .obtainMessage(MSG_INTERNAL_USER_TIMEOUT), USER_CONFIRM_TIMEOUT_VALUE);
                     }
-                } catch (IOException ex) {
+                } catch (IOException | NullPointerException ex) {
                     stopped = true; //IO exception, close the thread
                     Log.i(TAG, "Accept exception: " + ex.toString());
                 }
