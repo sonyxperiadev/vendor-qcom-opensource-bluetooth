@@ -16,7 +16,7 @@
 
 #define LOG_TAG "android.hardware.bluetooth@1.0-service-qti"
 
-#include <android/bluetooth/1.0/IBluetoothHci.h>
+#include <android/hardware/bluetooth/1.0/IBluetoothHci.h>
 
 #include <hidl/LegacySupport.h>
 
