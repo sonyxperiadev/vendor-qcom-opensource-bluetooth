@@ -49,185 +49,178 @@ import android.widget.TextView;
 import android.widget.Toast;
 // Activity for hid host qualification.
 public class HidTestApp extends Activity implements OnClickListener {
-	private static final String TAG = "HidTestApp";
-	private static BluetoothHidHost mService = null;
-	private BluetoothAdapter mAdapter;
-	private BluetoothDevice mRemoteDevice;
-	private Context mContext;
+    private static final String TAG = "HidTestApp";
+    private static BluetoothHidHost mService = null;
+    private BluetoothAdapter mAdapter;
+    private BluetoothDevice mRemoteDevice;
+    private Context mContext;
 
-	private EditText mEtBtAddress, mEtBtCommand;
-	private Button mBtnExecute;
+    private EditText mEtBtAddress, mEtBtCommand;
+    private Button mBtnExecute;
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.hidtestapp);
-		Log.i(TAG, "On Create ");
-		mEtBtAddress = (EditText) findViewById(R.id.id_et_btaddress);
-		mEtBtCommand = (EditText) findViewById(R.id.id_et_btcommand);
-		mBtnExecute = (Button) findViewById(R.id.id_btn_execute);
-		mBtnExecute.setOnClickListener(this);
-		mContext = getApplicationContext();
-		mAdapter = BluetoothAdapter.getDefaultAdapter();
-		init();
-	}
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.hidtestapp);
+        Log.i(TAG, "On Create ");
+        mEtBtAddress = (EditText) findViewById(R.id.id_et_btaddress);
+        mEtBtCommand = (EditText) findViewById(R.id.id_et_btcommand);
+        mBtnExecute = (Button) findViewById(R.id.id_btn_execute);
+        mBtnExecute.setOnClickListener(this);
+        mContext = getApplicationContext();
+        mAdapter = BluetoothAdapter.getDefaultAdapter();
+        init();
+    }
 
-	@Override
-	protected void onDestroy() {
-		// TODO Auto-generated method stub
-		super.onDestroy();
-		deinit();
-	}
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        deinit();
+    }
 
-	@Override
-	public void onClick(View v) {
-		if (v == mBtnExecute) {
-			executeCommand();
-		}
+    @Override
+    public void onClick(View v) {
+        if (v == mBtnExecute) {
+            executeCommand();
+        }
 
-	}
+    }
 
-	private boolean executeCommand() {
+    private boolean executeCommand() {
+        boolean isValid = true;
+        String address = mEtBtAddress.getText().toString().trim();
+        String command = mEtBtCommand.getText().toString().trim();
+        Log.e(TAG, "address = " + address + ", command = " + command);
+        if (address.length() != 17) {
+            mEtBtAddress.setError("Enter Proper Address");
+            isValid = false;
+        } else if (command.length() == 0) {
+            mEtBtCommand.setError("Enter proper command");
+            isValid = false;
+        }
 
-		boolean isValid = true;
-		String address = mEtBtAddress.getText().toString().trim();
-		String command = mEtBtCommand.getText().toString().trim();
-		Log.e(TAG, "address = " + address);
-		Log.e(TAG, "command = " + command);
-		if (address.length() != 17) {
-			mEtBtAddress.setError("Enter Proper Address");
-			isValid = false;
-		} else if (command.length() == 0) {
-			mEtBtCommand.setError("Enter proper command");
-			isValid = false;
-		}
+        if (isValid) {
+            /* Make sure that all the address bytes are in upper case */
+            String addSplit[] = address.split(":");
+            address = addSplit[0].toUpperCase() + ":" + addSplit[1].toUpperCase() + ":" +
+                addSplit[2].toUpperCase() + ":" + addSplit[3].toUpperCase() + ":" +
+                addSplit[4].toUpperCase() + ":" + addSplit[5].toUpperCase();
+            Log.e(TAG, "address = " + address);
+            try {
+                mRemoteDevice = mAdapter.getRemoteDevice(address);
+            } catch (IllegalArgumentException e) {
+                toast("Invalid BD Address");
+                return false;
+            }
+            String[] separated = command.split(" ");
+            int len = separated.length;
 
-		if (isValid) {
-		    /* Make sure that all the address bytes are in upper case */
-			String addSplit[] = address.split(":");
-			address = addSplit[0].toUpperCase() + ":" + addSplit[1].toUpperCase() + ":" +
-				addSplit[2].toUpperCase() + ":" + addSplit[3].toUpperCase() + ":" +
-				addSplit[4].toUpperCase() + ":" + addSplit[5].toUpperCase();
-			Log.e(TAG, "address = " + address);
-			try {
-				mRemoteDevice = mAdapter.getRemoteDevice(address);
-			} catch (IllegalArgumentException e) {
-				Toast.makeText(mContext, "Invalid BD Address", Toast.LENGTH_LONG).show();
-				return false;
-			}
-			String[] separated = command.split(" ");
-			int len = separated.length;
+            if (len > 0) {
+                if (separated[0].equals("getreport")) {
+                    if (len != 4) {
+                        toast("Invalid getreport command");
+                        isValid = false;
+                    } else {
+                        try {
+                            int reportType = Integer.parseInt(separated[1]);
+                            int reportId = Integer.parseInt(separated[2]);
+                            int bufferSize = Integer.parseInt(separated[3]);
+                            Log.v(TAG," reportType " + reportType+ ", reportId " + reportId
+                                    + ", bufferSize " + bufferSize);
+                            getReport(mRemoteDevice, (byte)reportType, (byte)reportId, bufferSize);
+                            toast("getreport command sent");
+                        } catch(NumberFormatException e) {
+                            toast("getreport input parameters exception");
+                        }
+                    }
+                } else if (separated[0].equals("setreport")) {
+                    if (len != 3) {
+                        toast("Invalid setreport command");
+                        isValid = false;
+                    } else {
+                        try {
+                            int reportType = Integer.parseInt(separated[1]);
+                            Log.v(TAG," reportType " + reportType + ", report " + separated[2]);
+                            setReport(mRemoteDevice, (byte)reportType, separated[2]);
+                            toast("setreport command sent");
+                        } catch(NumberFormatException e) {
+                            toast("setreport input parameters exception");
+                        }
+                    }
+                }  else if (separated[0].equals("virtualunplug")) {
+                    if (len != 1) {
+                        toast("Invalid virtualunplug command");
+                        isValid = false;
+                    } else {
+                        virtualUnplug(mRemoteDevice);
+                        toast("virtualunplug command sent");
+                    }
+                } else if (separated[0].equals("getprotocolmode")) {
+                    if (len != 1) {
+                        toast("Invalid getprotocolmode command");
+                        isValid = false;
+                    } else {
+                        getProtocolMode(mRemoteDevice);
+                        toast("getprotocolmode command sent");
+                    }
+                } else if (separated[0].equals("setprotocolmode")) {
+                    if (len != 2) {
+                        toast("Invalid setprotocolmode command");
+                        isValid = false;
+                    } else {
+                        try {
+                            int mode = Integer.parseInt(separated[1]);
+                            Log.v(TAG," mode " + mode);
+                            setProtocolMode(mRemoteDevice, mode);
+                            toast("setprotocolmode command sent");
+                        } catch(NumberFormatException e) {
+                            toast("setprotocolmode input parameters exception");
+                        }
+                    }
+                } else if (separated[0].equals("getidle")) {
+                    if (len != 1) {
+                        toast("Invalid getidle command");
+                        isValid = false;
+                    } else {
+                        getIdleTime(mRemoteDevice);
+                        toast("getidle command sent");
+                    }
+                } else if (separated[0].equals("setidle")) {
+                    if (len != 2) {
+                        toast("Invalid setidle command");
+                        isValid = false;
+                    } else {
+                        try {
+                            int idleTime = Integer.parseInt(separated[1]);
+                            Log.v(TAG," idleTime " + idleTime);
+                            setIdleTime(mRemoteDevice, (byte)idleTime);
+                            toast("setidle command sent");
+                        } catch(NumberFormatException e) {
+                            toast("setidle input parameters exception");
+                        }
+                    }
+                } else if (separated[0].equals("senddata")) {
+                    if (len != 2) {
+                        toast("Invalid senddata command");
+                        isValid = false;
+                    } else {
+                        Log.v(TAG," report " + separated[1]);
+                        sendData(mRemoteDevice, separated[1]);
+                        toast("senddata command sent");
+                    }
+                } else {
+                    toast("Invalid command");
+                    Log.v(TAG," Invalid command " + separated[0]);
+                    isValid = false;
+                }
+            }
+        }
+        return isValid;
+    }
 
-			if (len > 0) {
-				if (separated[0].equals("getreport")) {
-					if (len != 4) {
-						Toast.makeText(mContext, "Invalid getreport command", Toast.LENGTH_LONG).show();
-						isValid = false;
-					} else {
-						try {
-							int reportType = Integer.parseInt(separated[1]);
-							int reportId = Integer.parseInt(separated[2]);
-							int bufferSize = Integer.parseInt(separated[3]);
-							Log.v(TAG," reportType " + reportType);
-							Log.v(TAG," reportId " + reportId);
-							Log.v(TAG," bufferSize " + bufferSize);
-							getReport(mRemoteDevice, (byte)reportType, (byte)reportId, bufferSize);
-							Toast.makeText(mContext, "getreport command sent", Toast.LENGTH_LONG).show();
-						} catch(NumberFormatException e) {
-							Toast.makeText(mContext, "getreport input parameters exception",
-                                                               Toast.LENGTH_LONG).show();
-						}
-					}
-				} else if (separated[0].equals("setreport")) {
-					if (len != 3) {
-						Toast.makeText(mContext, "Invalid setreport command", Toast.LENGTH_LONG).show();
-						isValid = false;
-					} else {
-						try {
-							int reportType = Integer.parseInt(separated[1]);
-							Log.v(TAG," reportType " + reportType);
-							Log.v(TAG," report " + separated[2]);
-							setReport(mRemoteDevice, (byte)reportType, separated[2]);
-							Toast.makeText(mContext, "setreport command sent", Toast.LENGTH_LONG).show();
-						} catch(NumberFormatException e) {
-							Toast.makeText(mContext, "setreport input parameters exception",
-                                                               Toast.LENGTH_LONG).show();
-						}
-					}
-				}  else if (separated[0].equals("virtualunplug")) {
-					if (len != 1) {
-						Toast.makeText(mContext, "Invalid virtualunplug command", Toast.LENGTH_LONG).show();
-						isValid = false;
-					} else {
-					    virtualUnplug(mRemoteDevice);
-						Toast.makeText(mContext, "virtualunplug command sent", Toast.LENGTH_LONG).show();
-					}
-				} else if (separated[0].equals("getprotocolmode")) {
-					if (len != 1) {
-						Toast.makeText(mContext, "Invalid getprotocolmode command", Toast.LENGTH_LONG).show();
-						isValid = false;
-					} else {
-					    getProtocolMode(mRemoteDevice);
-						Toast.makeText(mContext, "getprotocolmode command sent", Toast.LENGTH_LONG).show();
-					}
-				} else if (separated[0].equals("setprotocolmode")) {
-					if (len != 2) {
-						Toast.makeText(mContext, "Invalid setprotocolmode command", Toast.LENGTH_LONG).show();
-						isValid = false;
-					} else {
-						try {
-							int mode = Integer.parseInt(separated[1]);
-							Log.v(TAG," mode " + mode);
-							setProtocolMode(mRemoteDevice, mode);
-							Toast.makeText(mContext, "setprotocolmode command sent", Toast.LENGTH_LONG).show();
-						} catch(NumberFormatException e) {
-							Toast.makeText(mContext, "setprotocolmode input parameters exception",
-                                                               Toast.LENGTH_LONG).show();
-						}
-					}
-				} else if (separated[0].equals("getidle")) {
-					if (len != 1) {
-						Toast.makeText(mContext, "Invalid getidle command", Toast.LENGTH_LONG).show();
-						isValid = false;
-					} else {
-					    getIdleTime(mRemoteDevice);
-						Toast.makeText(mContext, "getidle command sent", Toast.LENGTH_LONG).show();
-					}
-				} else if (separated[0].equals("setidle")) {
-					if (len != 2) {
-						Toast.makeText(mContext, "Invalid setidle command", Toast.LENGTH_LONG).show();
-						isValid = false;
-					} else {
-						try {
-							int idleTime = Integer.parseInt(separated[1]);
-							Log.v(TAG," idleTime " + idleTime);
-							setIdleTime(mRemoteDevice, (byte)idleTime);
-							Toast.makeText(mContext, "setidle command sent", Toast.LENGTH_LONG).show();
-						} catch(NumberFormatException e) {
-							Toast.makeText(mContext, "setidle input parameters exception",
-                                                               Toast.LENGTH_LONG).show();
-						}
-					}
-				} else if (separated[0].equals("senddata")) {
-					if (len != 2) {
-						Toast.makeText(mContext, "Invalid senddata command", Toast.LENGTH_LONG).show();
-						isValid = false;
-					} else {
-						Log.v(TAG," report " + separated[1]);
-						sendData(mRemoteDevice, separated[1]);
-						Toast.makeText(mContext, "senddata command sent", Toast.LENGTH_LONG).show();
-					}
-				} else {
-					Toast.makeText(mContext, "Invalid command", Toast.LENGTH_LONG).show();
-					Log.v(TAG," Invalid command " + separated[0]);
-					isValid = false;
-				}
-			}
-		}
-		return isValid;
-
-	}
+    private void toast(String msg){
+        Toast.makeText(mContext, msg, Toast.LENGTH_LONG).show();
+    }
 
     public void init() {
         if (!mAdapter.getProfileProxy(mContext, mServiceListener,
