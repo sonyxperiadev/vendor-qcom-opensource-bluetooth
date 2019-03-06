@@ -28,8 +28,8 @@
 
 package org.codeaurora.bluetooth.bttestapp;
 
-import org.codeaurora.bluetooth.bttestapp.util.Logger;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAvrcpController;
 import android.bluetooth.BluetoothProfile;
@@ -56,7 +56,7 @@ import android.media.session.MediaSession;
 import android.media.session.MediaSession.QueueItem;
 import android.widget.TextClock;
 
-public class AvrcpTestActivity extends MonkeyActivity implements OnClickListener {
+public class AvrcpTestActivity extends Activity implements OnClickListener {
 
     private final String TAG = "BtTestAvrcp";
     private Button mBtnPlayPause;

@@ -34,8 +34,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-
-import org.codeaurora.bluetooth.bttestapp.util.Logger;
+import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -78,7 +77,7 @@ public class BluetoothConnectionReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (ACTION_NEW_BLUETOOTH_DEVICE.equals(intent.getAction())) {
-            Logger.v(TAG, "Receive new bluetooth device.");
+            Log.v(TAG, "Receive new bluetooth device.");
 
             String address = intent.getStringExtra(EXTRA_DEVICE_ADDRESS);
 
@@ -87,18 +86,18 @@ public class BluetoothConnectionReceiver extends BroadcastReceiver {
                 selectedDevice = adapter.getRemoteDevice(address);
                 notifyObserversDeviceChanged(selectedDevice);
             } else {
-                Logger.e(TAG, "Received NULL address!");
+                Log.e(TAG, "Received NULL address!");
             }
         } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(intent.getAction())) {
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
             if (device.equals(selectedDevice)) {
-                Logger.v(TAG, "Received bluetooth disconected.");
+                Log.v(TAG, "Received bluetooth disconected.");
 
                 notifyObserversDeviceDisconected();
             }
         } else {
-            Logger.w(TAG, "Unknown intent received with action: " + intent.getAction());
+            Log.w(TAG, "Unknown intent received with action: " + intent.getAction());
         }
     }
 }

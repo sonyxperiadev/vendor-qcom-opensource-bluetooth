@@ -100,7 +100,8 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/activity_base_margin"
+        android:layout_marginLeft="@dimen/activity_base_margin"
+        android:layout_marginRight="@dimen/activity_base_margin"
         android:onClick="showCoveArtActivity"
         android:text="@string/showCoverArt" />
     <Button
@@ -111,6 +112,13 @@
         android:onClick="showAvrcpActivity"
         android:enabled="false"
         android:text="@string/showavrcp" />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showHidHost"
+        android:text="@string/showHidHost"
+        android:layout_marginLeft="@dimen/activity_base_margin"
+        android:layout_marginRight="@dimen/activity_base_margin"/>
     <TextView
         style="?android:attr/listSeparatorTextViewStyle"
         android:layout_width="match_parent"

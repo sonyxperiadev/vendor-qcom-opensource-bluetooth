@@ -29,6 +29,7 @@
 package org.codeaurora.bluetooth.bttestapp;
 
 import android.bluetooth.BluetoothAdapter;
+import android.app.Activity;
 import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothA2dpSink;
 import android.bluetooth.BluetoothDevice;
@@ -61,7 +62,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainActivity extends MonkeyActivity {
+public class MainActivity extends Activity {
 
     private final String TAG = "BtTestMainActivity";
 
@@ -265,6 +266,12 @@ public class MainActivity extends MonkeyActivity {
         Log.i(TAG," showAvrcpActivity");
         startActivity(new Intent(this,AvrcpTestActivity.class));
     }
+
+    public void showHidHost(View v) {
+        Log.i(TAG," showHidHost");
+        startActivity(new Intent(this, HidTestApp.class));
+    }
+
 
     private void updateDevice(BluetoothDevice device) {
         SharedPreferences.Editor prefs = getPreferences(MODE_PRIVATE).edit();

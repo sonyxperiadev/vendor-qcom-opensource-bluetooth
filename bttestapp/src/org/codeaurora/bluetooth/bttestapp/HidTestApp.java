@@ -27,7 +27,7 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.codeaurora.bluetooth.hidtestapp;
+package org.codeaurora.bluetooth.bttestapp;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
@@ -47,7 +47,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
+// Activity for hid host qualification.
 public class HidTestApp extends Activity implements OnClickListener {
 	private static final String TAG = "HidTestApp";
 	private static BluetoothHidHost mService = null;

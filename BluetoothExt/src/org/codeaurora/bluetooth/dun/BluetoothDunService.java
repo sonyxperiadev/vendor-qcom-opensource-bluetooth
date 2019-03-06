@@ -914,9 +914,7 @@ public class BluetoothDunService extends Service {
                 .setContentText(getString(R.string.dun_notif_message, name))
                 .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
                 .setAutoCancel(true)
-                .setPriority(Notification.PRIORITY_MAX)
                 .setOnlyAlertOnce(true)
-                .setDefaults(Notification.DEFAULT_SOUND)
                 .setContentIntent(PendingIntent.getActivity(this, 0, clickIntent, 0))
                 .setDeleteIntent(PendingIntent.getBroadcast(this, 0, deleteIntent, 0))
                 .setColor(this.getColor(

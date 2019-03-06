@@ -40,10 +40,16 @@
     <string name="blank"></string>
     <string name="cancel">Cancel</string>
 
+    <!-- HID -->
+    <string name="btn_label">Execute</string>
+    <string name="txt_hint_btaddress">BD Address</string>
+    <string name="txt_hint_command">HID Command</string>
+
     <!-- Main -->
     <string name="services_header">Available services</string>
     <string name="select_device">Select</string>
     <string name="showCoverArt">Cover Art</string>
+    <string name="showHidHost">Hid host qualification</string>
     <string name="discover_services">Discover</string>
     <string name="clear">Clear</string>
     <string name="list_empty">No records found!</string>
