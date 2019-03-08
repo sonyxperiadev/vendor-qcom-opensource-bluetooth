@@ -3,7 +3,6 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 ifeq (0,1)
-LOCAL_MODULE_TAGS := debug
 
 LOCAL_SRC_FILES := \
         $(call all-java-files-under, src)

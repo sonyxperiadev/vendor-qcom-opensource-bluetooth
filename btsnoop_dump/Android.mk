@@ -7,8 +7,6 @@ LOCAL_SRC_FILES:=     \
 
 LOCAL_C_INCLUDES :=
 
-LOCAL_MODULE_TAGS := debug optional
-
 LOCAL_MODULE:= btsnoop
 
 LOCAL_SHARED_LIBRARIES += libcutils

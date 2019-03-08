@@ -2,8 +2,6 @@ ifneq ($(TARGET_HAS_LOW_RAM), true)
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_MODULE_TAGS := debug
-
 LOCAL_SRC_FILES := \
         $(call all-java-files-under, src)
 LOCAL_SRC_FILES := $(filter-out src/org/codeaurora/bluetooth/bttestapp/PbapTestActivity.java,$(LOCAL_SRC_FILES))
