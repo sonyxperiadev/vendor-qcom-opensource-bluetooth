@@ -206,7 +206,7 @@ int snoop_connect_to_source (void)
         addr_len += sizeof(serv_addr.sun_family);
         do
         {
-            ret = connect(btsnoop_socket, &serv_addr, addr_len);
+            ret = connect(btsnoop_socket, (struct sockaddr *)&serv_addr, addr_len);
             if (ret < 0)
             {
                 snoop_log("Can't connect to BT traffic source : %s\n",strerror(errno));
@@ -265,8 +265,7 @@ static unsigned char read_buf[1200];
 int snoop_process (int sk)
 {
     int bytes_recv = 0;
-    struct stat st;
-    uint32_t sizeoffile = 0, length;
+    uint32_t  length;
 
     if (file_descriptor == -1)
     {
@@ -329,7 +328,7 @@ int snoop_process (int sk)
     return 0;
 }
 
-void *snoop_dump_thread( void *context)
+void *snoop_dump_thread()
 {
     int sk, ret, bytes_recv;
     uint32_t input_file_size;

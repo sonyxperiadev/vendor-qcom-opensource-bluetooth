@@ -79,7 +79,7 @@ typedef enum  {
 /*____________________________________________________________________
     VARIABLES
    ____________________________________________________________________*/
-static int file_descriptor = -1, server_socket = -1;
+static int server_socket = -1;
 static int sock_client[MAX_SOCK_CONNECTIONS] = { -1 };
 fd_set sock_fds;
 static bt_log_buffer_t *log_list = NULL;
@@ -129,7 +129,7 @@ static void SignalHandler(int sig)
     pending_dump = 1;
 }
 
-int main(int argc, char * argv[])
+int main()
 {
     int i = 0;
 
@@ -162,7 +162,7 @@ int main(int argc, char * argv[])
 
 void listen_data(void)
 {
-    int max_fd = -1, retval, read_len, i, s_fd, sock_len;
+    int max_fd = -1, retval, read_len, i, s_fd;
     struct sockaddr_un cliaddr;
     socklen_t addrlen;
     char buff[MAX_READ_LEN + 1];
