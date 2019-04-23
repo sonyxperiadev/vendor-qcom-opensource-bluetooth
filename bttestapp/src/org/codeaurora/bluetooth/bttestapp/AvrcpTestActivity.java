@@ -124,7 +124,7 @@ public class AvrcpTestActivity extends Activity implements OnClickListener {
         setContentView(R.layout.layout_avrcp);
         Log.i(TAG, "onCreate ");
         mBtnPlayPause = (Button) findViewById(R.id.id_btn_play_pause);
-        mBtnPlayPause.setText(STATUS_PAUSE);
+        mBtnPlayPause.setText(STATUS_PLAY);
         mBtnPlayPause.setOnClickListener(this);
         mContext = getApplicationContext();
         mAdapter.getProfileProxy(getApplicationContext(), mAvrcpControllerServiceListener,
@@ -132,8 +132,8 @@ public class AvrcpTestActivity extends Activity implements OnClickListener {
         te=(TextClock)findViewById(R.id.textClock);
         mMediaBrowser = new MediaBrowser(mContext,
                 new ComponentName("com.android.bluetooth",
-                        "com.android.bluetooth.a2dpsink.mbs.A2dpMediaBrowserService"),
-                        browseMediaConnectionCallback, null);
+                       "com.android.bluetooth.avrcpcontroller.BluetoothMediaBrowserService"),
+                       browseMediaConnectionCallback, null);
         mMediaBrowser.connect();
         // receive playback state change
         IntentFilter filter = new IntentFilter();
