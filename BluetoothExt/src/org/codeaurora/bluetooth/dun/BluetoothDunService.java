@@ -420,9 +420,10 @@ public class BluetoothDunService extends Service {
                         mIsWaitingAuthorization = false;
                     }
                     Intent intent = new Intent(USER_CONFIRM_TIMEOUT_ACTION);
+                    intent.setPackage(THIS_PACKAGE_NAME);
                     intent.putExtra(BluetoothDevice.EXTRA_DEVICE, mRemoteDevice);
                     intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
-                    sendBroadcast(intent);
+                    sendBroadcast(intent, BLUETOOTH_ADMIN_PERM);
                     removeDunNotification(DUN_NOTIFICATION_ID_ACCESS);
                     /* close the rfcomm socket and restart the listener thread */
                     closeRfcommSocket();
