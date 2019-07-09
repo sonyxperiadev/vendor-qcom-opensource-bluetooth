@@ -9,6 +9,7 @@ LOCAL_PACKAGE_NAME := BluetoothExt
 LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_CERTIFICATE := platform
 LOCAL_JAVA_LIBRARIES := javax.obex
+LOCAL_STATIC_JAVA_LIBRARIES := vendor.qti.hardware.bluetooth_dun-V1.0-java
 
 LOCAL_PROGUARD_ENABLED := disabled
 include $(BUILD_PACKAGE)
