@@ -751,7 +751,8 @@ public class BluetoothDunService extends Service {
                         mUplinkHIDLThread.join();
                         mUplinkHIDLThread = null;
                     } catch (InterruptedException ex) {
-                        Log.w(TAG, "mUplinkThread close error" + ex);
+                        Log.w(TAG, "mUplinkHIDLThread close error" + ex);
+                        mUplinkHIDLThread = null;
                     }
                 }
 
@@ -768,6 +769,7 @@ public class BluetoothDunService extends Service {
                         mUplinkThread = null;
                     } catch (InterruptedException ex) {
                         Log.w(TAG, "mUplinkThread close error" + ex);
+                        mUplinkThread = null;
                     }
                 }
 
@@ -791,7 +793,8 @@ public class BluetoothDunService extends Service {
                         mUplinkHIDLThread.join();
                         mUplinkHIDLThread = null;
                     } catch (InterruptedException ex) {
-                        Log.w(TAG, "mUplinkThread close error" + ex);
+                        Log.w(TAG, "mUplinkHIDLThread close error" + ex);
+                        mUplinkHIDLThread = null;
                     }
                 }
             } else {
@@ -802,6 +805,7 @@ public class BluetoothDunService extends Service {
                         mUplinkThread = null;
                     } catch (InterruptedException ex) {
                         Log.w(TAG, "mUplinkThread close error" + ex);
+                        mUplinkThread = null;
                     }
                 }
             }
@@ -854,6 +858,7 @@ public class BluetoothDunService extends Service {
                         mDownlinkThread = null;
                     } catch (InterruptedException ex) {
                         Log.w(TAG, "mDownlinkThread close error" + ex);
+                        mDownlinkThread = null;
                     }
                 }
             }
@@ -883,6 +888,7 @@ public class BluetoothDunService extends Service {
                     mMonitorThread = null;
                 } catch (InterruptedException ex) {
                     Log.w(TAG, "mMonitorThread close error" + ex);
+                    mMonitorThread = null;
                 }
             }
         }
@@ -1419,12 +1425,19 @@ public class BluetoothDunService extends Service {
                          }
                      }
                      try {
-                         if (mBluetoothDunServerProxy != null)
+                         if (mBluetoothDunServerProxy != null && mIsDunHIDLConnected) {
                              mBluetoothDunServerProxy.sendUplinkData(getByteArrayListFromByteArray(
                                     IpcMsgBuffer.array(), NumRead));
+                         } else {
+                            Log.i(TAG, "UplinkHIDLThread:: mIsDunHIDLConnected: "
+                                  + mIsDunHIDLConnected);
+                            IntExit = true;
+                            break;
+                         }
                      } catch (RemoteException ex) {
                          Log.e(TAG, "sendUplinkData exception: " + ex.toString());
                          IntExit = true;
+                         break;
                      }
                  } catch (IOException ex) {
                      IntExit = true;
@@ -1433,7 +1446,7 @@ public class BluetoothDunService extends Service {
                  }
              }
              // send the disconneciton request immediate to Dun server
-             if (IntExit) {
+             if (IntExit && mIsDunHIDLConnected) {
                  disconnect(mRemoteDevice);
              }
 
@@ -1456,7 +1469,7 @@ public class BluetoothDunService extends Service {
                  mDunArbitrationStarted = enableDataConnectivity(true);
              }
 
-             if (IntExit && !stopped) {
+             if (mIsDunHIDLConnected == false) {
                  if (VERBOSE) Log.v(TAG, "starting the listener thread ");
                  /* start the listener thread */
                  mDunHandler.sendMessage(mDunHandler.obtainMessage(MESSAGE_START_LISTENER));
@@ -1711,8 +1724,10 @@ public class BluetoothDunService extends Service {
                       break;
                   case BluetoothDunServerResponse.DUN_DISCONNECT_RESP:
                       Log.i(TAG, "DUN_DISCONNECT_RESP ");
-                      handleDunDeviceStateChange(mRemoteDevice,
-                              BluetoothProfile.STATE_DISCONNECTED);
+                      mIsDunHIDLConnected = false;
+                      if (mUplinkHIDLThread != null) {
+                          mUplinkHIDLThread.shutdown();
+                      }
                       break;
                   case BluetoothDunServerResponse.MODEM_STATUS_CHANGE_EVENT:
                       Log.i(TAG, "MODEM_STATUS_CHANGE_EVENT ");
@@ -1873,7 +1888,8 @@ public class BluetoothDunService extends Service {
 
         if (mHidlSupported) {
             try {
-              if (mBluetoothDunServerProxy != null)
+              Log.i(TAG, "disconnect: mIsDunHIDLConnected: " + mIsDunHIDLConnected);
+              if ((mBluetoothDunServerProxy != null) && mIsDunHIDLConnected)
                 mBluetoothDunServerProxy.sendCtrlMsg(CtrlMsg.DUN_DISCONNECT_REQ);
             } catch (RemoteException ex) {
                 Log.e(TAG, "sendCtrlMsg exception: " + ex.toString());
@@ -1917,8 +1933,12 @@ public class BluetoothDunService extends Service {
 
         if (mHidlSupported) {
             try {
-                if (mBluetoothDunServerProxy != null)
+                if (mBluetoothDunServerProxy != null && mIsDunHIDLConnected) {
                     mBluetoothDunServerProxy.sendModemStatus(status);
+                } else {
+                    Log.i(TAG, "notifyModemStatus: mIsDunHIDLConnected: "
+                            + mIsDunHIDLConnected);
+                }
             } catch (RemoteException ex) {
                 Log.e(TAG, "notifyModemStatus exception: " + ex.toString());
             }
