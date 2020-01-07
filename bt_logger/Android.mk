@@ -14,6 +14,8 @@ endif
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/incl
 
 LOCAL_MODULE:= bt_logger
+LOCAL_INIT_RC := init.qti.bt.logger.rc
+LOCAL_SYSTEM_EXT_MODULE := true
 
 LOCAL_SHARED_LIBRARIES += libcutils
 LOCAL_SHARED_LIBRARIES += liblog

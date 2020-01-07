@@ -8,6 +8,7 @@ LOCAL_SRC_FILES := $(filter-out src/org/codeaurora/bluetooth/bttestapp/PbapTestA
 LOCAL_SRC_FILES := $(filter-out src/org/codeaurora/bluetooth/bttestapp/services/IPbapServiceCallback.java,$(LOCAL_SRC_FILES))
 LOCAL_SRC_FILES := $(filter-out src/org/codeaurora/bluetooth/bttestapp/services/PbapAuthAcitivty.java,$(LOCAL_SRC_FILES))
 LOCAL_PACKAGE_NAME := BTTestApp
+LOCAL_SYSTEM_EXT_MODULE := true
 LOCAL_CERTIFICATE := platform
 
 LOCAL_MODULE_OWNER := qti

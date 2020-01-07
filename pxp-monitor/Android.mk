@@ -8,6 +8,7 @@ LOCAL_SRC_FILES := \
         src/org/codeaurora/bluetooth/pxpservice/IPxpService.aidl
 
 LOCAL_PACKAGE_NAME := pxp-monitor
+LOCAL_SYSTEM_EXT_MODULE := true
 LOCAL_CERTIFICATE := platform
 
 LOCAL_MODULE_OWNER := qcom
