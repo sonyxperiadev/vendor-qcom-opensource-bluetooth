@@ -58,6 +58,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.codeaurora.bluetooth.bttestapp.R;
+import org.codeaurora.bluetooth.bttestapp.hidd.HidDeviceActivity;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -272,6 +274,10 @@ public class MainActivity extends Activity {
         startActivity(new Intent(this, HidTestApp.class));
     }
 
+    public void showHidDevice(View v) {
+        Log.i(TAG," showHidDevice");
+        startActivity(new Intent(this, HidDeviceActivity.class));
+    }
 
     private void updateDevice(BluetoothDevice device) {
         SharedPreferences.Editor prefs = getPreferences(MODE_PRIVATE).edit();

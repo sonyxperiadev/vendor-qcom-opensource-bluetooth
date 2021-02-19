@@ -119,6 +119,13 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:onClick="showHidDevice"
+        android:text="@string/showHidDevice"
+        android:layout_marginLeft="@dimen/activity_base_margin"
+        android:layout_marginRight="@dimen/activity_base_margin"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:onClick="showHidHost"
         android:text="@string/showHidHost"
         android:layout_marginLeft="@dimen/activity_base_margin"
