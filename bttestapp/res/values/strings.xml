@@ -117,4 +117,34 @@
         <item>200000</item>
         <item>400000</item>
     </string-array>
+
+    <!-- HID Device -->
+    <string name="item_proto_boot">P=boot</string>
+    <string name="item_proto_report">P=report</string>
+    <string name="item_connect">Connect</string>
+    <string name="item_disconnect">Disconnect</string>
+    <string name="item_unplug">Unplug</string>
+
+    <string name="tab_mouse">Touchpad</string>
+    <string name="tab_keyboard_qwerty">QWERTY keybard</string>
+    <string name="tab_keyboard_numeric">Numeric keyboard</string>
+
+    <string name="led_numlock">Num Lock</string>
+    <string name="led_capslock">Caps Lock</string>
+    <string name="led_scrolllock">Scroll Lock</string>
+
+    <string name="unplug_title">Unplug device</string>
+    <string name="unplug_message">Do you really want to unplug device from host?</string>
+
+    <string name="speed_slow">Slow</string>
+    <string name="speed_medium">Medium</string>
+    <string name="speed_fast">Fast</string>
+
+    <string name="unplugged">unplugged</string>
+    <string name="plugged">VC=%s</string>
+
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+
+    <string name="showHidDevice">Hid Device</string>
 </resources>

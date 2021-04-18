@@ -6,6 +6,11 @@ android_app {
         "src/**/*.java",
     ],
 
+     static_libs: [
+     "com.google.android.material_material",
+     "androidx.appcompat_appcompat",
+     ],
+
     certificate: "platform",
 
     owner: "qti",

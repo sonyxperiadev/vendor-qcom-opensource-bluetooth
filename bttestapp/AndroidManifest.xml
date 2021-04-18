@@ -43,6 +43,15 @@
         <activity
             android:name=".HidTestApp"
             android:configChanges="orientation|keyboardHidden|screenSize" />
+
+        <service
+            android:name=".hidd.HidDeviceWrapper"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
+
+         <activity
+            android:name=".hidd.HidDeviceActivity"
+            android:theme="@style/custom_style"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
     </application>
 
 </manifest>
