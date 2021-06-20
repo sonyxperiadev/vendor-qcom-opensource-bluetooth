@@ -1090,8 +1090,10 @@ public class BluetoothDunService extends Service {
                 .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true)
-                .setContentIntent(PendingIntent.getActivity(this, 0, clickIntent, 0))
-                .setDeleteIntent(PendingIntent.getBroadcast(this, 0, deleteIntent, 0))
+                .setContentIntent(PendingIntent.getActivity(this, 0, clickIntent,
+                        PendingIntent.FLAG_IMMUTABLE))
+                .setDeleteIntent(PendingIntent.getBroadcast(this, 0, deleteIntent,
+                        PendingIntent.FLAG_IMMUTABLE))
                 .setColor(this.getColor(
                         com.android.internal.R.color.system_notification_accent_color))
                 .setOnlyAlertOnce(true)
