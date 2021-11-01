@@ -16,7 +16,7 @@ TC_HOS_HID_BV_01_C - Verify host can send correct Get Report command .
 getreport 1 1 0
 
 TC_HOS_HID_BV_02_C - Verify host can send Force the IUT to send a Set_Report command to the PTS.
-setreport 2 a
+setreport 3 a
 
 TC_HOS_HID_BV_03_C - Verify host can send Get protocol Command.
 getprotocolmode
