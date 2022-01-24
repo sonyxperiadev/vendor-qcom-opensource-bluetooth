@@ -7,17 +7,18 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_STACK" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.RECEIVE_BLUETOOTH_MAP" />
-    <uses-permission android:name="android.permission.ACCESS_BLUETOOTH_AVRCP_CT_DATA" />
-    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="28" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"/>
+    <uses-sdk android:minSdkVersion="30" android:targetSdkVersion="30" />
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme_NOACTION_BAR" >
         <activity android:name=".MainActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize" >
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -27,13 +28,16 @@
             android:name="AvrcpCoverArtActivity"
            android:label="@string/avrcp_cover_art"
            android:screenOrientation="portrait"
-            android:configChanges="orientation|keyboardHidden|screenSize" />
+           android:configChanges="orientation|keyboardHidden|screenSize"
+           android:exported="true"/>
         <activity
             android:name=".AvrcpTestActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTop"
+            android:exported="true"/>
 
-        <receiver android:name=".BluetoothConnectionReceiver" >
+        <receiver android:name=".BluetoothConnectionReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="org.codeaurora.bluetooth.action.NEW_BLUETOOTH_DEVICE" />
                 <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
@@ -42,16 +46,16 @@
 
         <activity
             android:name=".HidTestApp"
-            android:configChanges="orientation|keyboardHidden|screenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize" android:exported="true" />
 
         <service
             android:name=".hidd.HidDeviceWrapper"
-            android:configChanges="orientation|keyboardHidden|screenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize" android:exported="true" />
 
          <activity
             android:name=".hidd.HidDeviceActivity"
             android:theme="@style/custom_style"
-            android:configChanges="orientation|keyboardHidden|screenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize" android:exported="true" />
     </application>
 
 </manifest>
