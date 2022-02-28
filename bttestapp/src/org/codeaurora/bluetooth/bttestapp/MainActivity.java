@@ -28,6 +28,8 @@
 
 package org.codeaurora.bluetooth.bttestapp;
 
+import androidx.core.content.ContextCompat;
+import androidx.annotation.NonNull;
 import android.bluetooth.BluetoothAdapter;
 import android.app.Activity;
 import android.bluetooth.BluetoothA2dp;
@@ -44,6 +46,8 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.Manifest;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcelable;
@@ -90,6 +94,9 @@ public class MainActivity extends Activity {
     private final String UUID_AUDIO_SOURCE = "0000110A-0000-1000-8000-00805F9B34FB";
     private final String UUID_AUDIO_SINK = "0000110B-0000-1000-8000-00805F9B34FB";
     private final String KEY_A2DP_SINK = "persist.vendor.service.bt.a2dp.sink";
+
+    String per [] = {Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_ADVERTISE};
 
     private final BroadcastReceiver mPickerReceiver = new BroadcastReceiver() {
 
@@ -174,10 +181,16 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.v(TAG, "onCreate");
-
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         setContentView(R.layout.activity_main);
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.BLUETOOTH_CONNECT) !=
+                PackageManager.PERMISSION_GRANTED ) {
+            Log.d(TAG ," requestPermissions ");
+            requestPermissions(per,1);
+        } else {
+            Log.d(TAG ," Permission present ");
+        }
+
     }
 
     @Override
@@ -349,4 +362,17 @@ public class MainActivity extends Activity {
             mBtnSelectDevice.setEnabled(false);
         }
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        for (String p : permissions) {
+            Log.d(TAG,"onRequestPermissionsResult permissions " + p);
+        }
+        for (int r : grantResults) {
+            Log.d(TAG, "  onRequestPermissionsResult grantResults " + r);
+        }
+    }
+
 }
